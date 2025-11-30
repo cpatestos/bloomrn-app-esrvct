@@ -35,12 +35,12 @@ class ErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromError(error: Error) {
-    console.error("ErrorBoundary caught error:", error);
+    console.error("❌ ErrorBoundary caught error:", error);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error("ErrorBoundary details:", error, errorInfo);
+    console.error("❌ ErrorBoundary details:", error, errorInfo);
   }
 
   render() {
@@ -65,7 +65,7 @@ class ErrorBoundary extends React.Component<
 }
 
 function RootLayoutNav() {
-  console.log("RootLayoutNav rendering...");
+  console.log("🚀 RootLayoutNav rendering...");
   const colorScheme = useColorScheme();
   const networkState = useNetworkState();
   const segments = useSegments();
@@ -76,7 +76,7 @@ function RootLayoutNav() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const hasCheckedOnboarding = useRef(false);
 
-  console.log("Font loaded:", loaded, "Font error:", error);
+  console.log("📝 Font loaded:", loaded, "Font error:", error);
 
   useEffect(() => {
     // Only check onboarding once when fonts are loaded
@@ -84,35 +84,35 @@ function RootLayoutNav() {
       return;
     }
 
-    console.log("useEffect: checking onboarding...");
+    console.log("🔍 useEffect: checking onboarding...");
     hasCheckedOnboarding.current = true;
 
     async function checkOnboarding() {
       try {
-        console.log("Fetching user profile...");
+        console.log("📱 Fetching user profile...");
         const profile = await storage.getUserProfile();
-        console.log("User profile:", profile);
+        console.log("👤 User profile:", profile);
         
         const completed = profile?.hasCompletedOnboarding || false;
         setHasCompletedOnboarding(completed);
         
         if (!completed) {
-          console.log("Redirecting to onboarding...");
+          console.log("➡️  Redirecting to onboarding welcome screen...");
           router.replace('/onboarding/welcome');
         } else {
-          console.log("User has completed onboarding");
+          console.log("✅ User has completed onboarding");
         }
       } catch (error) {
-        console.error('Error checking onboarding:', error);
+        console.error('❌ Error checking onboarding:', error);
       } finally {
         setIsCheckingOnboarding(false);
-        console.log("Onboarding check complete");
+        console.log("✅ Onboarding check complete");
       }
     }
 
-    console.log("Fonts loaded, checking onboarding and hiding splash...");
+    console.log("🎨 Fonts loaded, checking onboarding and hiding splash...");
     checkOnboarding();
-    SplashScreen.hideAsync().catch(err => console.error("Error hiding splash:", err));
+    SplashScreen.hideAsync().catch(err => console.error("❌ Error hiding splash:", err));
   }, [loaded]);
 
   // Protect routes based on onboarding status
@@ -124,27 +124,27 @@ function RootLayoutNav() {
     const inOnboarding = segments[0] === 'onboarding';
     const inAuth = segments[0] === 'auth';
     
-    console.log("Route protection check:", { 
+    console.log("🔐 Route protection check:", { 
       hasCompletedOnboarding, 
       inOnboarding,
       inAuth,
-      segments 
+      currentRoute: segments.join('/') || 'root'
     });
 
     // If user hasn't completed onboarding and not in onboarding/auth flow, redirect
     if (!hasCompletedOnboarding && !inOnboarding && !inAuth) {
-      console.log("Redirecting to onboarding from route protection");
+      console.log("➡️  Redirecting to onboarding from route protection");
       router.replace('/onboarding/welcome');
     }
     // If user has completed onboarding and is in onboarding flow, redirect to home
     else if (hasCompletedOnboarding && inOnboarding) {
-      console.log("Redirecting to home from route protection");
+      console.log("➡️  Redirecting to home from route protection");
       router.replace('/(tabs)/(home)/');
     }
   }, [hasCompletedOnboarding, segments, isCheckingOnboarding, loaded]);
 
   React.useEffect(() => {
-    console.log("Network state:", networkState);
+    console.log("🌐 Network state:", networkState);
     if (
       !networkState.isConnected &&
       networkState.isInternetReachable === false
@@ -157,7 +157,7 @@ function RootLayoutNav() {
   }, [networkState.isConnected, networkState.isInternetReachable]);
 
   if (error) {
-    console.error("Font loading error:", error);
+    console.error("❌ Font loading error:", error);
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
         <Text style={{ fontSize: 18, color: "#000" }}>Font loading error</Text>
@@ -167,11 +167,11 @@ function RootLayoutNav() {
   }
 
   if (!loaded || isCheckingOnboarding) {
-    console.log("Waiting for fonts or onboarding check...", { loaded, isCheckingOnboarding });
+    console.log("⏳ Waiting for fonts or onboarding check...", { loaded, isCheckingOnboarding });
     return null;
   }
 
-  console.log("Rendering main app with theme:", colorScheme);
+  console.log("🎨 Rendering main app with theme:", colorScheme);
 
   const CustomDefaultTheme: Theme = {
     ...DefaultTheme,
@@ -221,6 +221,7 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  console.log("🎬 App starting - RootLayout component mounted");
   return (
     <ErrorBoundary>
       <StatusBar style="auto" animated />
