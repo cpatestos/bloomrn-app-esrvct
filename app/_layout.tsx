@@ -1,8 +1,8 @@
 
 import "react-native-reanimated";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useFonts } from "expo-font";
-import { Stack, router } from "expo-router";
+import { Stack, router, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -67,22 +67,35 @@ export default function RootLayout() {
   console.log("RootLayout rendering...");
   const colorScheme = useColorScheme();
   const networkState = useNetworkState();
+  const segments = useSegments();
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const hasCheckedOnboarding = useRef(false);
 
   console.log("Font loaded:", loaded, "Font error:", error);
 
   useEffect(() => {
+    // Only check onboarding once when fonts are loaded
+    if (!loaded || hasCheckedOnboarding.current) {
+      return;
+    }
+
     console.log("useEffect: checking onboarding...");
+    hasCheckedOnboarding.current = true;
+
     async function checkOnboarding() {
       try {
         console.log("Fetching user profile...");
         const profile = await storage.getUserProfile();
         console.log("User profile:", profile);
         
-        if (!profile || !profile.hasCompletedOnboarding) {
+        const completed = profile?.hasCompletedOnboarding || false;
+        setHasCompletedOnboarding(completed);
+        
+        if (!completed) {
           console.log("Redirecting to onboarding...");
           router.replace('/onboarding/welcome');
         } else {
@@ -96,12 +109,36 @@ export default function RootLayout() {
       }
     }
 
-    if (loaded) {
-      console.log("Fonts loaded, checking onboarding and hiding splash...");
-      checkOnboarding();
-      SplashScreen.hideAsync().catch(err => console.error("Error hiding splash:", err));
-    }
+    console.log("Fonts loaded, checking onboarding and hiding splash...");
+    checkOnboarding();
+    SplashScreen.hideAsync().catch(err => console.error("Error hiding splash:", err));
   }, [loaded]);
+
+  // Protect routes based on onboarding status
+  useEffect(() => {
+    if (isCheckingOnboarding || !loaded) {
+      return;
+    }
+
+    const inOnboarding = segments[0] === 'onboarding';
+    
+    console.log("Route protection check:", { 
+      hasCompletedOnboarding, 
+      inOnboarding, 
+      segments 
+    });
+
+    // If user hasn't completed onboarding and not in onboarding flow, redirect
+    if (!hasCompletedOnboarding && !inOnboarding) {
+      console.log("Redirecting to onboarding from route protection");
+      router.replace('/onboarding/welcome');
+    }
+    // If user has completed onboarding and is in onboarding flow, redirect to home
+    else if (hasCompletedOnboarding && inOnboarding) {
+      console.log("Redirecting to home from route protection");
+      router.replace('/(tabs)/(home)/');
+    }
+  }, [hasCompletedOnboarding, segments, isCheckingOnboarding, loaded]);
 
   React.useEffect(() => {
     console.log("Network state:", networkState);
