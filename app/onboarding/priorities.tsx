@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { Priority, UserRole } from '@/types';
@@ -49,7 +49,23 @@ export default function PrioritiesScreen() {
     };
 
     await storage.saveUserProfile(profile);
-    router.replace('/daily-checkin');
+
+    // Offer to create an account
+    Alert.alert(
+      'Setup Complete! 🎉',
+      'Would you like to create an account to sync your data across devices?',
+      [
+        {
+          text: 'Not Now',
+          style: 'cancel',
+          onPress: () => router.replace('/daily-checkin'),
+        },
+        {
+          text: 'Create Account',
+          onPress: () => router.replace('/auth/sign-up'),
+        },
+      ]
+    );
   };
 
   return (

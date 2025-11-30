@@ -16,6 +16,7 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { storage } from "@/utils/storage";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -63,8 +64,8 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-export default function RootLayout() {
-  console.log("RootLayout rendering...");
+function RootLayoutNav() {
+  console.log("RootLayoutNav rendering...");
   const colorScheme = useColorScheme();
   const networkState = useNetworkState();
   const segments = useSegments();
@@ -121,15 +122,17 @@ export default function RootLayout() {
     }
 
     const inOnboarding = segments[0] === 'onboarding';
+    const inAuth = segments[0] === 'auth';
     
     console.log("Route protection check:", { 
       hasCompletedOnboarding, 
-      inOnboarding, 
+      inOnboarding,
+      inAuth,
       segments 
     });
 
-    // If user hasn't completed onboarding and not in onboarding flow, redirect
-    if (!hasCompletedOnboarding && !inOnboarding) {
+    // If user hasn't completed onboarding and not in onboarding/auth flow, redirect
+    if (!hasCompletedOnboarding && !inOnboarding && !inAuth) {
       console.log("Redirecting to onboarding from route protection");
       router.replace('/onboarding/welcome');
     }
@@ -196,24 +199,34 @@ export default function RootLayout() {
   };
 
   return (
+    <ThemeProvider
+      value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
+    >
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="onboarding/welcome" />
+          <Stack.Screen name="onboarding/role-selection" />
+          <Stack.Screen name="onboarding/profile" />
+          <Stack.Screen name="onboarding/priorities" />
+          <Stack.Screen name="auth/sign-in" />
+          <Stack.Screen name="auth/sign-up" />
+          <Stack.Screen name="daily-checkin" />
+          <Stack.Screen name="checkin-complete" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+        <SystemBars style={"auto"} />
+      </GestureHandlerRootView>
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <ErrorBoundary>
       <StatusBar style="auto" animated />
-      <ThemeProvider
-        value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
-      >
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="onboarding/welcome" />
-            <Stack.Screen name="onboarding/role-selection" />
-            <Stack.Screen name="onboarding/profile" />
-            <Stack.Screen name="onboarding/priorities" />
-            <Stack.Screen name="daily-checkin" />
-            <Stack.Screen name="checkin-complete" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-          <SystemBars style={"auto"} />
-        </GestureHandlerRootView>
-      </ThemeProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
