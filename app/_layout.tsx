@@ -6,7 +6,7 @@ import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme, Alert } from "react-native";
+import { useColorScheme, Alert, View, Text } from "react-native";
 import { useNetworkState } from "expo-network";
 import {
   DarkTheme,
@@ -23,35 +23,88 @@ export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    console.error("ErrorBoundary caught error:", error);
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error("ErrorBoundary details:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: "#fff" }}>
+          <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10, color: "#000" }}>
+            Something went wrong
+          </Text>
+          <Text style={{ fontSize: 14, color: "#666", textAlign: "center" }}>
+            {this.state.error?.message || "Unknown error"}
+          </Text>
+          <Text style={{ fontSize: 12, color: "#999", marginTop: 20, textAlign: "center" }}>
+            Check the console for more details
+          </Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function RootLayout() {
+  console.log("RootLayout rendering...");
   const colorScheme = useColorScheme();
   const networkState = useNetworkState();
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
 
+  console.log("Font loaded:", loaded, "Font error:", error);
+
   useEffect(() => {
+    console.log("useEffect: checking onboarding...");
     async function checkOnboarding() {
       try {
+        console.log("Fetching user profile...");
         const profile = await storage.getUserProfile();
+        console.log("User profile:", profile);
+        
         if (!profile || !profile.hasCompletedOnboarding) {
+          console.log("Redirecting to onboarding...");
           router.replace('/onboarding/welcome');
+        } else {
+          console.log("User has completed onboarding");
         }
       } catch (error) {
         console.error('Error checking onboarding:', error);
       } finally {
         setIsCheckingOnboarding(false);
+        console.log("Onboarding check complete");
       }
     }
 
     if (loaded) {
+      console.log("Fonts loaded, checking onboarding and hiding splash...");
       checkOnboarding();
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(err => console.error("Error hiding splash:", err));
     }
   }, [loaded]);
 
   React.useEffect(() => {
+    console.log("Network state:", networkState);
     if (
       !networkState.isConnected &&
       networkState.isInternetReachable === false
@@ -63,9 +116,22 @@ export default function RootLayout() {
     }
   }, [networkState.isConnected, networkState.isInternetReachable]);
 
+  if (error) {
+    console.error("Font loading error:", error);
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
+        <Text style={{ fontSize: 18, color: "#000" }}>Font loading error</Text>
+        <Text style={{ fontSize: 14, color: "#666", marginTop: 10 }}>{error.message}</Text>
+      </View>
+    );
+  }
+
   if (!loaded || isCheckingOnboarding) {
+    console.log("Waiting for fonts or onboarding check...", { loaded, isCheckingOnboarding });
     return null;
   }
+
+  console.log("Rendering main app with theme:", colorScheme);
 
   const CustomDefaultTheme: Theme = {
     ...DefaultTheme,
@@ -93,12 +159,12 @@ export default function RootLayout() {
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <StatusBar style="auto" animated />
       <ThemeProvider
         value={colorScheme === "dark" ? CustomDarkTheme : CustomDefaultTheme}
       >
-        <GestureHandlerRootView>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="onboarding/welcome" />
             <Stack.Screen name="onboarding/role-selection" />
@@ -111,6 +177,6 @@ export default function RootLayout() {
           <SystemBars style={"auto"} />
         </GestureHandlerRootView>
       </ThemeProvider>
-    </>
+    </ErrorBoundary>
   );
 }
