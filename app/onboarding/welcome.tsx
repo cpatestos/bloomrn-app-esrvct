@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
@@ -7,17 +7,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    console.log('✅ WelcomeScreen mounted and rendering!');
-    setIsLoaded(true);
-  }, []);
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[colors.primary, colors.secondary]}
+        colors={[colors.primaryLight, colors.secondaryLight]}
         style={styles.gradient}
       >
         <ScrollView 
@@ -28,39 +22,42 @@ export default function WelcomeScreen() {
             <Text style={styles.logo}>🌸</Text>
             <Text style={styles.title}>BloomRN</Text>
             <Text style={styles.subtitle}>
-              Your companion for nursing school and professional practice
+              Your wellness companion for nursing
             </Text>
             <Text style={styles.description}>
-              Supporting student nurses and registered nurses with tools for well-being, reflection, and growth.
+              Supporting student nurses and registered nurses with mindfulness, self-care, and reflection tools.
             </Text>
 
-            {isLoaded && (
-              <View style={styles.statusContainer}>
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusEmoji}>✅</Text>
-                  <Text style={styles.statusText}>App is running!</Text>
-                </View>
-                <Text style={styles.statusSubtext}>
-                  If you can see this screen, your app is working correctly.
-                </Text>
+            <View style={styles.featureContainer}>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>🧘‍♀️</Text>
+                <Text style={styles.featureText}>Mindfulness</Text>
               </View>
-            )}
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>📝</Text>
+                <Text style={styles.featureText}>Journaling</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>📊</Text>
+                <Text style={styles.featureText}>Tracking</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>💚</Text>
+                <Text style={styles.featureText}>Self-Care</Text>
+              </View>
+            </View>
           </View>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[buttonStyles.primary, styles.button]}
               onPress={() => {
-                console.log('Get Started button pressed - navigating to role selection');
+                console.log('Get Started button pressed');
                 router.push('/onboarding/role-selection');
               }}
             >
-              <Text style={buttonStyles.text}>Get Started</Text>
+              <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>Get Started</Text>
             </TouchableOpacity>
-
-            <Text style={styles.helpText}>
-              👆 Tap the button above to continue
-            </Text>
           </View>
         </ScrollView>
       </LinearGradient>
@@ -80,7 +77,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 80,
     paddingBottom: 60,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   content: {
     alignItems: 'center',
@@ -88,22 +85,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    fontSize: 80,
-    marginBottom: 20,
+    fontSize: 100,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 48,
+    fontSize: 56,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 16,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
     paddingHorizontal: 20,
   },
   description: {
@@ -112,36 +109,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 30,
-    marginBottom: 30,
+    marginBottom: 40,
   },
-  statusContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 20,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  statusBadge: {
+  featureContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 20,
+    marginTop: 20,
+  },
+  featureItem: {
     alignItems: 'center',
-    marginBottom: 10,
+    width: 80,
   },
-  statusEmoji: {
-    fontSize: 24,
-    marginRight: 10,
+  featureIcon: {
+    fontSize: 40,
+    marginBottom: 8,
   },
-  statusText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  statusSubtext: {
+  featureText: {
     fontSize: 14,
+    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
-    opacity: 0.9,
   },
   buttonContainer: {
     width: '100%',
@@ -149,12 +138,5 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    marginBottom: 16,
-  },
-  helpText: {
-    fontSize: 14,
-    color: colors.text,
-    textAlign: 'center',
-    opacity: 0.8,
   },
 });

@@ -24,7 +24,6 @@ export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
 
-// Error Boundary Component
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean; error: Error | null }
@@ -79,7 +78,6 @@ function RootLayoutNav() {
   console.log("📝 Font loaded:", loaded, "Font error:", error);
 
   useEffect(() => {
-    // Only check onboarding once when fonts are loaded
     if (!loaded || hasCheckedOnboarding.current) {
       return;
     }
@@ -115,7 +113,6 @@ function RootLayoutNav() {
     SplashScreen.hideAsync().catch(err => console.error("❌ Error hiding splash:", err));
   }, [loaded]);
 
-  // Protect routes based on onboarding status
   useEffect(() => {
     if (isCheckingOnboarding || !loaded) {
       return;
@@ -131,13 +128,10 @@ function RootLayoutNav() {
       currentRoute: segments.join('/') || 'root'
     });
 
-    // If user hasn't completed onboarding and not in onboarding/auth flow, redirect
     if (!hasCompletedOnboarding && !inOnboarding && !inAuth) {
       console.log("➡️  Redirecting to onboarding from route protection");
       router.replace('/onboarding/welcome');
-    }
-    // If user has completed onboarding and is in onboarding flow, redirect to home
-    else if (hasCompletedOnboarding && inOnboarding) {
+    } else if (hasCompletedOnboarding && inOnboarding) {
       console.log("➡️  Redirecting to home from route protection");
       router.replace('/(tabs)/(home)/');
     }
@@ -177,24 +171,24 @@ function RootLayoutNav() {
     ...DefaultTheme,
     dark: false,
     colors: {
-      primary: "rgb(0, 122, 255)",
-      background: "rgb(242, 242, 247)",
+      primary: "rgb(79, 195, 247)",
+      background: "rgb(240, 248, 255)",
       card: "rgb(255, 255, 255)",
-      text: "rgb(0, 0, 0)",
-      border: "rgb(216, 216, 220)",
-      notification: "rgb(255, 59, 48)",
+      text: "rgb(27, 94, 32)",
+      border: "rgb(176, 190, 197)",
+      notification: "rgb(239, 83, 80)",
     },
   };
 
   const CustomDarkTheme: Theme = {
     ...DarkTheme,
     colors: {
-      primary: "rgb(10, 132, 255)",
-      background: "rgb(1, 1, 1)",
+      primary: "rgb(79, 195, 247)",
+      background: "rgb(18, 18, 18)",
       card: "rgb(28, 28, 30)",
-      text: "rgb(255, 255, 255)",
-      border: "rgb(44, 44, 46)",
-      notification: "rgb(255, 69, 58)",
+      text: "rgb(200, 230, 201)",
+      border: "rgb(84, 110, 122)",
+      notification: "rgb(239, 83, 80)",
     },
   };
 
@@ -207,11 +201,10 @@ function RootLayoutNav() {
           <Stack.Screen name="onboarding/welcome" />
           <Stack.Screen name="onboarding/role-selection" />
           <Stack.Screen name="onboarding/profile" />
-          <Stack.Screen name="onboarding/priorities" />
           <Stack.Screen name="auth/sign-in" />
           <Stack.Screen name="auth/sign-up" />
           <Stack.Screen name="daily-checkin" />
-          <Stack.Screen name="checkin-complete" />
+          <Stack.Screen name="activity-detail" />
           <Stack.Screen name="(tabs)" />
         </Stack>
         <SystemBars style={"auto"} />

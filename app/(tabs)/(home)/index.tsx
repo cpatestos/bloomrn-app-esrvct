@@ -1,42 +1,42 @@
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { storage } from '@/utils/storage';
 import { UserProfile, DailyCheckIn } from '@/types';
-import { getRandomAffirmation } from '@/data/affirmations';
-import { defaultSelfCareActivities } from '@/data/selfCareActivities';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const loadData = async () => {
-    const userProfile = await storage.getUserProfile();
-    const checkIn = await storage.getTodayCheckIn();
-    setProfile(userProfile);
-    setTodayCheckIn(checkIn);
-  };
+  const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
     loadData();
+    setGreeting(getGreeting());
   }, []);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
+  const loadData = async () => {
+    try {
+      const userProfile = await storage.getUserProfile();
+      setProfile(userProfile);
+
+      const checkIns = await storage.getDailyCheckIns();
+      const today = new Date().toISOString().split('T')[0];
+      const todayEntry = checkIns.find(c => c.date === today);
+      setTodayCheckIn(todayEntry || null);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
   };
 
-  const getSuggestions = () => {
-    if (!profile) return [];
-    const roleActivities = defaultSelfCareActivities.filter(
-      a => !a.roleTag || a.roleTag === profile.role
-    );
-    return roleActivities.sort(() => Math.random() - 0.5).slice(0, 3);
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
   };
 
   const getMoodEmoji = (mood: number) => {
@@ -44,87 +44,140 @@ export default function HomeScreen() {
     return emojis[mood - 1] || '😐';
   };
 
-  return (
-    <ScrollView
-      style={commonStyles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.header}>
-        <Text style={commonStyles.title}>
-          Welcome back, {profile?.firstName || 'there'}! 🌸
-        </Text>
-        <Text style={commonStyles.text}>
-          {profile?.role === 'student' ? 'Student Nurse' : 'Registered Nurse'}
-        </Text>
-      </View>
+  const handleDailyCheckIn = () => {
+    router.push('/daily-checkin');
+  };
 
-      {todayCheckIn ? (
-        <View style={[commonStyles.card, styles.checkInCard]}>
-          <Text style={styles.cardTitle}>Today&apos;s Check-In</Text>
-          <View style={styles.checkInRow}>
-            <View style={styles.checkInItem}>
-              <Text style={styles.checkInLabel}>Mood</Text>
-              <Text style={styles.checkInValue}>
-                {getMoodEmoji(todayCheckIn.mood)} {todayCheckIn.mood}/5
+  return (
+    <ScrollView style={commonStyles.container} contentContainerStyle={styles.content}>
+      <LinearGradient
+        colors={[colors.primaryLight, colors.background]}
+        style={styles.headerGradient}
+      >
+        <View style={styles.header}>
+          <Text style={styles.greeting}>{greeting},</Text>
+          <Text style={styles.name}>{profile?.firstName || 'Friend'} 🌸</Text>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>
+              {profile?.role === 'student' ? '🎓 Student Nurse' : '⚕️ Registered Nurse'}
+            </Text>
+          </View>
+        </View>
+      </LinearGradient>
+
+      <View style={styles.mainContent}>
+        {!todayCheckIn ? (
+          <TouchableOpacity
+            style={styles.checkInCard}
+            onPress={handleDailyCheckIn}
+          >
+            <LinearGradient
+              colors={[colors.primary, colors.primaryDark]}
+              style={styles.checkInGradient}
+            >
+              <Text style={styles.checkInIcon}>✨</Text>
+              <Text style={styles.checkInTitle}>Daily Check-In</Text>
+              <Text style={styles.checkInSubtitle}>
+                Take a moment to reflect on how you&apos;re feeling
               </Text>
-            </View>
-            <View style={styles.checkInItem}>
-              <Text style={styles.checkInLabel}>Stress</Text>
-              <Text style={styles.checkInValue}>{todayCheckIn.stress}/5</Text>
-            </View>
-            <View style={styles.checkInItem}>
-              <Text style={styles.checkInLabel}>Energy</Text>
-              <Text style={styles.checkInValue}>{todayCheckIn.energy}/5</Text>
+              <View style={styles.checkInButton}>
+                <Text style={styles.checkInButtonText}>Start Check-In →</Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        ) : (
+          <View style={commonStyles.card}>
+            <View style={styles.checkInComplete}>
+              <Text style={styles.checkInCompleteIcon}>✅</Text>
+              <View style={styles.checkInCompleteContent}>
+                <Text style={commonStyles.heading}>Today&apos;s Check-In Complete</Text>
+                <Text style={commonStyles.textSecondary}>
+                  Mood: {getMoodEmoji(todayCheckIn.mood)} • Stress: {todayCheckIn.stress}/5 • Energy: {todayCheckIn.energy}/5
+                </Text>
+              </View>
             </View>
           </View>
-          {todayCheckIn.gratitude.length > 0 && (
-            <View style={styles.gratitudeSection}>
-              <Text style={styles.gratitudeLabel}>Grateful for:</Text>
-              {todayCheckIn.gratitude.map((item, index) => (
-                <React.Fragment key={index}>
-                  <Text style={styles.gratitudeItem}>• {item}</Text>
-                </React.Fragment>
-              ))}
+        )}
+
+        <View style={styles.quickActions}>
+          <Text style={commonStyles.subtitle}>Quick Actions</Text>
+          
+          <TouchableOpacity
+            style={commonStyles.cardSmall}
+            onPress={() => router.push('/(tabs)/wellness')}
+          >
+            <View style={styles.actionItem}>
+              <Text style={styles.actionIcon}>🧘‍♀️</Text>
+              <View style={styles.actionContent}>
+                <Text style={commonStyles.heading}>Mindfulness & Self-Care</Text>
+                <Text style={commonStyles.textSecondary}>
+                  Explore activities to support your well-being
+                </Text>
+              </View>
             </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={commonStyles.cardSmall}
+            onPress={() => router.push('/(tabs)/journal')}
+          >
+            <View style={styles.actionItem}>
+              <Text style={styles.actionIcon}>📝</Text>
+              <View style={styles.actionContent}>
+                <Text style={commonStyles.heading}>Journal & Reflect</Text>
+                <Text style={commonStyles.textSecondary}>
+                  Write about your experiences and feelings
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          {profile?.role === 'student' && (
+            <TouchableOpacity
+              style={commonStyles.cardSmall}
+              onPress={() => router.push('/study/focus-timer')}
+            >
+              <View style={styles.actionItem}>
+                <Text style={styles.actionIcon}>⏱️</Text>
+                <View style={styles.actionContent}>
+                  <Text style={commonStyles.heading}>Focus Timer</Text>
+                  <Text style={commonStyles.textSecondary}>
+                    Use the Pomodoro technique for studying
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {profile?.role === 'rn' && (
+            <TouchableOpacity
+              style={commonStyles.cardSmall}
+              onPress={() => router.push('/shift/log-shift')}
+            >
+              <View style={styles.actionItem}>
+                <Text style={styles.actionIcon}>🏥</Text>
+                <View style={styles.actionContent}>
+                  <Text style={commonStyles.heading}>Log Shift</Text>
+                  <Text style={commonStyles.textSecondary}>
+                    Record and reflect on your shift
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           )}
         </View>
-      ) : (
-        <View style={[commonStyles.card, styles.promptCard]}>
-          <Text style={styles.promptText}>
-            You haven&apos;t checked in today. Take a moment to reflect on how you&apos;re feeling.
-          </Text>
-          <TouchableOpacity
-            style={[buttonStyles.primary, styles.checkInButton]}
-            onPress={() => router.push('/daily-checkin')}
-          >
-            <Text style={buttonStyles.text}>Daily Check-In</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
-      {profile && (
-        <View style={[commonStyles.card, styles.affirmationCard]}>
-          <Text style={styles.cardTitle}>Your Affirmation</Text>
-          <Text style={styles.affirmationText}>
-            {getRandomAffirmation(profile.role)}
-          </Text>
+        <View style={styles.affirmation}>
+          <View style={commonStyles.card}>
+            <Text style={styles.affirmationIcon}>💚</Text>
+            <Text style={styles.affirmationTitle}>Today&apos;s Affirmation</Text>
+            <Text style={styles.affirmationText}>
+              {profile?.role === 'student' 
+                ? "You are capable of learning and growing every day. Trust in your journey."
+                : "You make a difference in the lives you touch. Your care matters."}
+            </Text>
+          </View>
         </View>
-      )}
-
-      <View style={styles.section}>
-        <Text style={commonStyles.subtitle}>Self-Care Suggestions</Text>
-        {getSuggestions().map((activity, index) => (
-          <React.Fragment key={index}>
-            <View style={commonStyles.card}>
-              <Text style={styles.activityTitle}>{activity.title}</Text>
-              <Text style={styles.activityDescription}>{activity.description}</Text>
-              <Text style={styles.activityDuration}>{activity.durationMinutes} min • {activity.category}</Text>
-            </View>
-          </React.Fragment>
-        ))}
       </View>
     </ScrollView>
   );
@@ -132,98 +185,132 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingTop: 48,
-    paddingHorizontal: 20,
     paddingBottom: 120,
   },
+  headerGradient: {
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
   header: {
-    marginBottom: 24,
+    marginBottom: 0,
   },
-  checkInCard: {
-    backgroundColor: colors.highlight,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  checkInRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12,
-  },
-  checkInItem: {
-    alignItems: 'center',
-  },
-  checkInLabel: {
-    fontSize: 12,
+  greeting: {
+    fontSize: 20,
+    fontWeight: '500',
     color: colors.textSecondary,
     marginBottom: 4,
   },
-  checkInValue: {
+  name: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  roleBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  roleBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  mainContent: {
+    paddingHorizontal: 20,
+  },
+  checkInCard: {
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+    boxShadow: '0px 4px 16px rgba(79, 195, 247, 0.3)',
+    elevation: 5,
+  },
+  checkInGradient: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  checkInIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  checkInTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  checkInSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  checkInButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  checkInButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  checkInComplete: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkInCompleteIcon: {
+    fontSize: 40,
+    marginRight: 16,
+  },
+  checkInCompleteContent: {
+    flex: 1,
+  },
+  quickActions: {
+    marginBottom: 24,
+  },
+  actionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionIcon: {
+    fontSize: 40,
+    marginRight: 16,
+  },
+  actionContent: {
+    flex: 1,
+  },
+  affirmation: {
+    marginBottom: 24,
+  },
+  affirmationIcon: {
+    fontSize: 48,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  affirmationTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-  },
-  gratitudeSection: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  gratitudeLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  gratitudeItem: {
-    fontSize: 14,
-    color: colors.text,
-    marginBottom: 4,
-  },
-  promptCard: {
-    backgroundColor: colors.secondary,
-    marginBottom: 16,
-  },
-  promptText: {
-    fontSize: 16,
-    color: colors.text,
-    marginBottom: 16,
     textAlign: 'center',
-  },
-  checkInButton: {
-    width: '100%',
-  },
-  affirmationCard: {
-    backgroundColor: colors.accent,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   affirmationText: {
     fontSize: 16,
-    fontStyle: 'italic',
-    color: colors.text,
+    color: colors.textSecondary,
+    textAlign: 'center',
     lineHeight: 24,
-  },
-  section: {
-    marginTop: 8,
-  },
-  activityTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  activityDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  activityDuration: {
-    fontSize: 12,
-    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
 });

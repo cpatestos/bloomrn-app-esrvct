@@ -5,8 +5,6 @@ import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { storage } from '@/utils/storage';
 import { DailyCheckIn } from '@/types';
-import { getRandomAffirmation } from '@/data/affirmations';
-import { defaultSelfCareActivities } from '@/data/selfCareActivities';
 
 export default function DailyCheckInScreen() {
   const router = useRouter();
@@ -44,24 +42,8 @@ export default function DailyCheckInScreen() {
       };
 
       await storage.saveDailyCheckIn(checkIn);
-
-      // Get suggestions and affirmation
-      const affirmation = getRandomAffirmation(profile.role);
-      const allActivities = defaultSelfCareActivities;
-      const roleActivities = allActivities.filter(
-        a => !a.roleTag || a.roleTag === profile.role
-      );
-      const suggestions = roleActivities
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
-
-      router.replace({
-        pathname: '/checkin-complete',
-        params: {
-          affirmation,
-          suggestions: JSON.stringify(suggestions.map(s => ({ title: s.title, duration: s.durationMinutes }))),
-        },
-      });
+      Alert.alert('Success', 'Check-in saved successfully!');
+      router.back();
     } catch (error) {
       console.error('Error saving check-in:', error);
       Alert.alert('Error', 'Failed to save check-in');
@@ -70,9 +52,12 @@ export default function DailyCheckInScreen() {
     }
   };
 
-  const renderScale = (value: number, setValue: (v: number) => void, label: string) => (
+  const renderScale = (value: number, setValue: (v: number) => void, label: string, emoji: string) => (
     <View style={styles.scaleContainer}>
-      <Text style={styles.scaleLabel}>{label}</Text>
+      <View style={styles.scaleHeader}>
+        <Text style={styles.scaleEmoji}>{emoji}</Text>
+        <Text style={styles.scaleLabel}>{label}</Text>
+      </View>
       <View style={styles.scale}>
         {[1, 2, 3, 4, 5].map((num, index) => (
           <React.Fragment key={index}>
@@ -100,6 +85,13 @@ export default function DailyCheckInScreen() {
 
   return (
     <ScrollView style={commonStyles.container} contentContainerStyle={styles.content}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
+        <Text style={styles.backButtonText}>← Back</Text>
+      </TouchableOpacity>
+
       <View style={styles.header}>
         <Text style={commonStyles.title}>Daily Check-In</Text>
         <Text style={commonStyles.text}>
@@ -108,43 +100,47 @@ export default function DailyCheckInScreen() {
       </View>
 
       <View style={styles.form}>
-        {renderScale(mood, setMood, 'How is your mood? (1=Low, 5=Great)')}
-        {renderScale(stress, setStress, 'Stress level? (1=Low, 5=High)')}
-        {renderScale(energy, setEnergy, 'Energy level? (1=Low, 5=High)')}
+        {renderScale(mood, setMood, 'How is your mood?', '😊')}
+        {renderScale(stress, setStress, 'Stress level?', '😰')}
+        {renderScale(energy, setEnergy, 'Energy level?', '⚡')}
 
-        <Text style={styles.label}>Optional Note</Text>
-        <TextInput
-          style={[commonStyles.input, styles.textArea]}
-          value={note}
-          onChangeText={setNote}
-          placeholder="Anything on your mind?"
-          placeholderTextColor={colors.textSecondary}
-          multiline
-          numberOfLines={3}
-        />
+        <View style={styles.noteSection}>
+          <Text style={styles.sectionTitle}>💭 Optional Note</Text>
+          <TextInput
+            style={[commonStyles.input, styles.textArea]}
+            value={note}
+            onChangeText={setNote}
+            placeholder="Anything on your mind?"
+            placeholderTextColor={colors.textLight}
+            multiline
+            numberOfLines={4}
+          />
+        </View>
 
-        <Text style={styles.label}>Gratitude (1-3 items)</Text>
-        <TextInput
-          style={commonStyles.input}
-          value={gratitude1}
-          onChangeText={setGratitude1}
-          placeholder="Something you're grateful for"
-          placeholderTextColor={colors.textSecondary}
-        />
-        <TextInput
-          style={commonStyles.input}
-          value={gratitude2}
-          onChangeText={setGratitude2}
-          placeholder="Another thing (optional)"
-          placeholderTextColor={colors.textSecondary}
-        />
-        <TextInput
-          style={commonStyles.input}
-          value={gratitude3}
-          onChangeText={setGratitude3}
-          placeholder="One more (optional)"
-          placeholderTextColor={colors.textSecondary}
-        />
+        <View style={styles.gratitudeSection}>
+          <Text style={styles.sectionTitle}>🙏 Gratitude (1-3 items)</Text>
+          <TextInput
+            style={commonStyles.input}
+            value={gratitude1}
+            onChangeText={setGratitude1}
+            placeholder="Something you're grateful for"
+            placeholderTextColor={colors.textLight}
+          />
+          <TextInput
+            style={commonStyles.input}
+            value={gratitude2}
+            onChangeText={setGratitude2}
+            placeholder="Another thing (optional)"
+            placeholderTextColor={colors.textLight}
+          />
+          <TextInput
+            style={commonStyles.input}
+            value={gratitude3}
+            onChangeText={setGratitude3}
+            placeholder="One more (optional)"
+            placeholderTextColor={colors.textLight}
+          />
+        </View>
       </View>
 
       <TouchableOpacity
@@ -152,7 +148,7 @@ export default function DailyCheckInScreen() {
         onPress={handleSubmit}
         disabled={isSubmitting}
       >
-        <Text style={buttonStyles.text}>
+        <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>
           {isSubmitting ? 'Saving...' : 'Complete Check-In'}
         </Text>
       </TouchableOpacity>
@@ -162,9 +158,17 @@ export default function DailyCheckInScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingTop: 48,
+    paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 40,
+  },
+  backButton: {
+    marginBottom: 20,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
   },
   header: {
     marginBottom: 32,
@@ -173,13 +177,26 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   scaleContainer: {
-    marginBottom: 24,
+    marginBottom: 32,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
+  },
+  scaleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  scaleEmoji: {
+    fontSize: 24,
+    marginRight: 12,
   },
   scaleLabel: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 12,
   },
   scale: {
     flexDirection: 'row',
@@ -188,11 +205,11 @@ const styles = StyleSheet.create({
   },
   scaleButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 2,
     borderColor: colors.border,
-    backgroundColor: colors.card,
+    backgroundColor: colors.background,
     alignItems: 'center',
   },
   scaleButtonSelected: {
@@ -200,21 +217,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.highlight,
   },
   scaleButtonText: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '600',
     color: colors.text,
   },
   scaleButtonTextSelected: {
-    fontWeight: '600',
+    color: colors.primaryDark,
   },
-  label: {
-    fontSize: 16,
+  noteSection: {
+    marginBottom: 24,
+  },
+  gratitudeSection: {
+    marginBottom: 0,
+  },
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
-    marginTop: 8,
+    marginBottom: 12,
   },
   textArea: {
-    height: 80,
+    height: 100,
     textAlignVertical: 'top',
   },
   button: {

@@ -1,75 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
-import { storage } from '@/utils/storage';
-import { SelfCareActivity } from '@/types';
 
 export default function ActivityDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const activityId = params.activityId as string;
+  const { title, description, duration, icon } = params;
 
-  const [activity, setActivity] = useState<SelfCareActivity | null>(null);
-  const [timerSeconds, setTimerSeconds] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    loadActivity();
-  }, [activityId]);
+  const [timeLeft, setTimeLeft] = useState(Number(duration) * 60);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
-    return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-    };
-  }, [timerInterval]);
-
-  const loadActivity = async () => {
-    const activities = await storage.getSelfCareActivities();
-    const found = activities.find(a => a.id === activityId);
-    if (found) {
-      setActivity(found);
-      setTimerSeconds(found.durationMinutes * 60);
+    let interval: NodeJS.Timeout;
+    if (isRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setIsRunning(false);
+            setIsComplete(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
-  };
-
-  const startTimer = () => {
-    setIsTimerRunning(true);
-    const interval = setInterval(() => {
-      setTimerSeconds(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsTimerRunning(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    setTimerInterval(interval);
-  };
-
-  const pauseTimer = () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
-    }
-    setIsTimerRunning(false);
-  };
-
-  const resetTimer = () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
-    }
-    setIsTimerRunning(false);
-    if (activity) {
-      setTimerSeconds(activity.durationMinutes * 60);
-    }
-  };
+    return () => clearInterval(interval);
+  }, [isRunning, timeLeft]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -77,13 +36,15 @@ export default function ActivityDetailScreen() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (!activity) {
-    return (
-      <View style={[commonStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={commonStyles.text}>Loading...</Text>
-      </View>
-    );
-  }
+  const handleStartPause = () => {
+    setIsRunning(!isRunning);
+  };
+
+  const handleReset = () => {
+    setIsRunning(false);
+    setTimeLeft(Number(duration) * 60);
+    setIsComplete(false);
+  };
 
   return (
     <ScrollView style={commonStyles.container} contentContainerStyle={styles.content}>
@@ -95,41 +56,91 @@ export default function ActivityDetailScreen() {
       </TouchableOpacity>
 
       <View style={styles.header}>
-        <Text style={commonStyles.title}>{activity.title}</Text>
-        <Text style={styles.meta}>
-          {activity.durationMinutes} min • {activity.category}
-        </Text>
+        <Text style={styles.icon}>{icon}</Text>
+        <Text style={commonStyles.title}>{title}</Text>
+        <Text style={commonStyles.text}>{description}</Text>
       </View>
 
-      <View style={commonStyles.card}>
-        <Text style={styles.description}>{activity.description}</Text>
-      </View>
+      <View style={styles.timerCard}>
+        <View style={styles.timerCircle}>
+          <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+          <Text style={styles.timerLabel}>
+            {isComplete ? 'Complete!' : isRunning ? 'In Progress' : 'Ready'}
+          </Text>
+        </View>
 
-      <View style={[commonStyles.card, styles.timerCard]}>
-        <Text style={styles.timerLabel}>Timer</Text>
-        <Text style={styles.timerDisplay}>{formatTime(timerSeconds)}</Text>
-        <View style={styles.timerButtons}>
-          {!isTimerRunning ? (
-            <TouchableOpacity
-              style={[buttonStyles.primary, styles.timerButton]}
-              onPress={startTimer}
-            >
-              <Text style={buttonStyles.text}>Start</Text>
-            </TouchableOpacity>
+        <View style={styles.controls}>
+          {!isComplete ? (
+            <>
+              <TouchableOpacity
+                style={[buttonStyles.primary, styles.controlButton]}
+                onPress={handleStartPause}
+              >
+                <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>
+                  {isRunning ? '⏸️ Pause' : '▶️ Start'}
+                </Text>
+              </TouchableOpacity>
+              {timeLeft !== Number(duration) * 60 && (
+                <TouchableOpacity
+                  style={[buttonStyles.outline, styles.controlButton]}
+                  onPress={handleReset}
+                >
+                  <Text style={buttonStyles.text}>🔄 Reset</Text>
+                </TouchableOpacity>
+              )}
+            </>
           ) : (
-            <TouchableOpacity
-              style={[buttonStyles.secondary, styles.timerButton]}
-              onPress={pauseTimer}
-            >
-              <Text style={buttonStyles.text}>Pause</Text>
-            </TouchableOpacity>
+            <>
+              <View style={styles.completeMessage}>
+                <Text style={styles.completeIcon}>✨</Text>
+                <Text style={styles.completeText}>
+                  Great job! You completed this activity.
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[buttonStyles.primary, styles.controlButton]}
+                onPress={handleReset}
+              >
+                <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>
+                  Do It Again
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[buttonStyles.outline, styles.controlButton]}
+                onPress={() => router.back()}
+              >
+                <Text style={buttonStyles.text}>Back to Wellness</Text>
+              </TouchableOpacity>
+            </>
           )}
-          <TouchableOpacity
-            style={[buttonStyles.outline, styles.timerButton]}
-            onPress={resetTimer}
-          >
-            <Text style={buttonStyles.text}>Reset</Text>
-          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.tipsCard}>
+        <Text style={commonStyles.heading}>💡 Tips</Text>
+        <View style={styles.tipItem}>
+          <Text style={styles.tipBullet}>•</Text>
+          <Text style={commonStyles.text}>
+            Find a quiet, comfortable space
+          </Text>
+        </View>
+        <View style={styles.tipItem}>
+          <Text style={styles.tipBullet}>•</Text>
+          <Text style={commonStyles.text}>
+            Turn off notifications and distractions
+          </Text>
+        </View>
+        <View style={styles.tipItem}>
+          <Text style={styles.tipBullet}>•</Text>
+          <Text style={commonStyles.text}>
+            Focus on your breath and be present
+          </Text>
+        </View>
+        <View style={styles.tipItem}>
+          <Text style={styles.tipBullet}>•</Text>
+          <Text style={commonStyles.text}>
+            Be kind to yourself throughout
+          </Text>
         </View>
       </View>
     </ScrollView>
@@ -138,53 +149,93 @@ export default function ActivityDetailScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingTop: 48,
+    paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   backButton: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   backButtonText: {
     fontSize: 16,
+    fontWeight: '600',
     color: colors.primary,
   },
   header: {
-    marginBottom: 24,
+    alignItems: 'center',
+    marginBottom: 32,
   },
-  meta: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 8,
-  },
-  description: {
-    fontSize: 16,
-    color: colors.text,
-    lineHeight: 24,
+  icon: {
+    fontSize: 80,
+    marginBottom: 16,
   },
   timerCard: {
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 32,
+    marginBottom: 24,
     alignItems: 'center',
-    paddingVertical: 32,
-    marginTop: 16,
+    boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.1)',
+    elevation: 5,
+  },
+  timerCircle: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: colors.highlight,
+    borderWidth: 8,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  timerText: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: colors.primaryDark,
   },
   timerLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.textSecondary,
-    marginBottom: 16,
+    marginTop: 8,
   },
-  timerDisplay: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 24,
-  },
-  timerButtons: {
-    flexDirection: 'row',
+  controls: {
+    width: '100%',
     gap: 12,
+  },
+  controlButton: {
     width: '100%',
   },
-  timerButton: {
-    flex: 1,
+  completeMessage: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  completeIcon: {
+    fontSize: 48,
+    marginBottom: 8,
+  },
+  completeText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  tipsCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    marginTop: 12,
+  },
+  tipBullet: {
+    fontSize: 16,
+    color: colors.primary,
+    marginRight: 12,
+    fontWeight: '700',
   },
 });

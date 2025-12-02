@@ -1,42 +1,70 @@
 
-import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+// Calming blues and greens color palette
 export const colors = {
-  background: '#F0F8FF',
-  text: '#2F4F4F',
-  textSecondary: '#696969',
-  primary: '#ADD8E6',
-  secondary: '#90EE90',
-  accent: '#F5DEB3',
-  card: '#FFFFFF',
-  highlight: '#E0FFFF',
-  border: '#D3D3D3',
-  error: '#FF6B6B',
-  success: '#4CAF50',
+  // Primary colors - calming blues
+  primaryLight: '#B3E5FC',    // Light sky blue
+  primary: '#4FC3F7',          // Bright blue
+  primaryDark: '#0288D1',      // Deep blue
+  
+  // Secondary colors - soothing greens
+  secondaryLight: '#C8E6C9',   // Light mint green
+  secondary: '#66BB6A',        // Fresh green
+  secondaryDark: '#388E3C',    // Deep green
+  
+  // Neutral colors
+  background: '#F0F8FF',       // Alice blue (very light blue)
+  backgroundAlt: '#E8F5E9',    // Very light green
+  card: '#FFFFFF',             // White
+  
+  // Text colors
+  text: '#1B5E20',             // Dark green
+  textSecondary: '#546E7A',    // Blue grey
+  textLight: '#78909C',        // Light blue grey
+  
+  // Accent colors
+  accent: '#80DEEA',           // Cyan
+  highlight: '#E0F7FA',        // Very light cyan
+  
+  // Status colors
+  success: '#66BB6A',          // Green
+  warning: '#FFA726',          // Orange
+  error: '#EF5350',            // Red
+  info: '#42A5F5',             // Blue
+  
+  // UI elements
+  border: '#B0BEC5',           // Grey blue
+  divider: '#CFD8DC',          // Light grey
+  shadow: 'rgba(0, 0, 0, 0.1)',
 };
 
 export const buttonStyles = StyleSheet.create({
   primary: {
     backgroundColor: colors.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0px 4px 12px rgba(79, 195, 247, 0.3)',
+    elevation: 4,
   },
   secondary: {
     backgroundColor: colors.secondary,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: '0px 4px 12px rgba(102, 187, 106, 0.3)',
+    elevation: 4,
   },
   outline: {
     backgroundColor: 'transparent',
     paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingHorizontal: 32,
+    borderRadius: 16,
     borderWidth: 2,
     borderColor: colors.primary,
     alignItems: 'center',
@@ -46,6 +74,11 @@ export const buttonStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+  },
+  textLight: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 
@@ -58,26 +91,30 @@ export const commonStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    width: '100%',
-    height: '100%',
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 48,
+    paddingTop: 60,
     paddingBottom: 120,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 12,
+  },
+  heading: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
   },
   text: {
     fontSize: 16,
@@ -91,20 +128,34 @@ export const commonStyles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
+  textLight: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: colors.textLight,
+    lineHeight: 20,
+  },
   card: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
+  },
+  cardSmall: {
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.06)',
     elevation: 2,
   },
   input: {
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
     color: colors.text,
@@ -115,7 +166,25 @@ export const commonStyles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: colors.border,
-    marginVertical: 16,
+    backgroundColor: colors.divider,
+    marginVertical: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  badge: {
+    backgroundColor: colors.highlight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primaryDark,
   },
 });

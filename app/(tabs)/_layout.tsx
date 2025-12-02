@@ -12,28 +12,22 @@ export default function TabLayout() {
       label: 'Home',
     },
     {
-      name: 'bloom-care',
-      route: '/(tabs)/bloom-care',
+      name: 'wellness',
+      route: '/(tabs)/wellness',
       icon: 'favorite',
-      label: 'Bloom Care',
+      label: 'Wellness',
     },
     {
-      name: 'work-study',
-      route: '/(tabs)/work-study',
-      icon: 'school',
-      label: 'Work/Study',
-    },
-    {
-      name: 'reflect',
-      route: '/(tabs)/reflect',
+      name: 'journal',
+      route: '/(tabs)/journal',
       icon: 'edit_note',
-      label: 'Reflect',
+      label: 'Journal',
     },
     {
-      name: 'resources',
-      route: '/(tabs)/resources',
-      icon: 'info',
-      label: 'Resources',
+      name: 'profile',
+      route: '/(tabs)/profile',
+      icon: 'person',
+      label: 'Profile',
     },
   ];
 
@@ -46,10 +40,9 @@ export default function TabLayout() {
         }}
       >
         <Stack.Screen key="home" name="(home)" />
-        <Stack.Screen key="bloom-care" name="bloom-care" />
-        <Stack.Screen key="work-study" name="work-study" />
-        <Stack.Screen key="reflect" name="reflect" />
-        <Stack.Screen key="resources" name="resources" />
+        <Stack.Screen key="wellness" name="wellness" />
+        <Stack.Screen key="journal" name="journal" />
+        <Stack.Screen key="profile" name="profile" />
       </Stack>
       <FloatingTabBar tabs={tabs} containerWidth={380} />
     </>
