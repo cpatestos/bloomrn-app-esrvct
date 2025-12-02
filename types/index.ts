@@ -98,3 +98,16 @@ export interface Resource {
   actionType: 'url' | 'phone' | 'email';
   actionValue: string;
 }
+
+export interface MediaRecording {
+  id: string;
+  userId: string;
+  mediaType: 'audio' | 'video';
+  filePath: string;
+  title?: string;
+  description?: string;
+  durationSeconds?: number;
+  fileSizeBytes?: number;
+  createdAt: string;
+  updatedAt: string;
+}

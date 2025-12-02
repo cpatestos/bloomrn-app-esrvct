@@ -7,313 +7,317 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
+export interface Database {
   public: {
     Tables: {
-      barriers: {
+      profiles: {
         Row: {
-          action_step: string
-          category: string
-          created_at: string
-          date: string
-          description: string
           id: string
-          updated_at: string
           user_id: string
+          first_name: string
+          role: string
+          priorities: Json
+          has_completed_onboarding: boolean
+          program_type: string | null
+          semester: string | null
+          year: string | null
+          years_experience: string | null
+          setting: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          action_step: string
-          category: string
-          created_at?: string
-          date: string
-          description: string
           id?: string
-          updated_at?: string
           user_id: string
+          first_name: string
+          role: string
+          priorities: Json
+          has_completed_onboarding?: boolean
+          program_type?: string | null
+          semester?: string | null
+          year?: string | null
+          years_experience?: string | null
+          setting?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          action_step?: string
-          category?: string
-          created_at?: string
-          date?: string
-          description?: string
           id?: string
-          updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      challenges: {
-        Row: {
-          action_step: string
-          category: string
-          created_at: string
-          date: string
-          description: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          action_step: string
-          category: string
+          first_name?: string
+          role?: string
+          priorities?: Json
+          has_completed_onboarding?: boolean
+          program_type?: string | null
+          semester?: string | null
+          year?: string | null
+          years_experience?: string | null
+          setting?: string | null
           created_at?: string
-          date: string
-          description: string
-          id?: string
           updated_at?: string
-          user_id: string
         }
-        Update: {
-          action_step?: string
-          category?: string
-          created_at?: string
-          date?: string
-          description?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       daily_checkins: {
         Row: {
-          created_at: string
-          date: string
-          energy: number
-          gratitude: string[]
           id: string
+          user_id: string
+          date: string
           mood: number
+          stress: number
+          energy: number
           note: string | null
-          stress: number
-          updated_at: string
-          user_id: string
+          gratitude: string[]
+          created_at: string
         }
         Insert: {
-          created_at?: string
-          date: string
-          energy: number
-          gratitude?: string[]
           id?: string
+          user_id: string
+          date: string
           mood: number
-          note?: string | null
           stress: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          energy?: number
-          gratitude?: string[]
-          id?: string
-          mood?: number
+          energy: number
           note?: string | null
-          stress?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      journal_entries: {
-        Row: {
-          content: string
-          created_at: string
-          date: string
-          id: string
-          title: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
+          gratitude: string[]
           created_at?: string
-          date: string
-          id?: string
-          title?: string | null
-          updated_at?: string
-          user_id: string
         }
         Update: {
-          content?: string
-          created_at?: string
+          id?: string
+          user_id?: string
           date?: string
-          id?: string
-          title?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          first_name: string
-          has_completed_onboarding: boolean
-          id: string
-          priorities: string[]
-          program_type: string | null
-          role: string
-          semester: string | null
-          setting: string | null
-          updated_at: string
-          user_id: string
-          year: string | null
-          years_experience: string | null
-        }
-        Insert: {
+          mood?: number
+          stress?: number
+          energy?: number
+          note?: string | null
+          gratitude?: string[]
           created_at?: string
-          first_name: string
-          has_completed_onboarding?: boolean
-          id?: string
-          priorities?: string[]
-          program_type?: string | null
-          role: string
-          semester?: string | null
-          setting?: string | null
-          updated_at?: string
-          user_id: string
-          year?: string | null
-          years_experience?: string | null
         }
-        Update: {
-          created_at?: string
-          first_name?: string
-          has_completed_onboarding?: boolean
-          id?: string
-          priorities?: string[]
-          program_type?: string | null
-          role?: string
-          semester?: string | null
-          setting?: string | null
-          updated_at?: string
-          user_id?: string
-          year?: string | null
-          years_experience?: string | null
-        }
-        Relationships: []
       }
       self_care_activities: {
         Row: {
-          category: string
-          created_at: string
+          id: string
+          user_id: string
+          title: string
           description: string
           duration_minutes: number
-          id: string
-          is_favorite: boolean
+          category: string
           role_tag: string | null
-          title: string
-          updated_at: string
-          user_id: string
+          is_favorite: boolean
+          created_at: string
         }
         Insert: {
-          category: string
-          created_at?: string
+          id?: string
+          user_id: string
+          title: string
           description: string
           duration_minutes: number
-          id?: string
-          is_favorite?: boolean
+          category: string
           role_tag?: string | null
-          title: string
-          updated_at?: string
-          user_id: string
+          is_favorite?: boolean
+          created_at?: string
         }
         Update: {
-          category?: string
-          created_at?: string
+          id?: string
+          user_id?: string
+          title?: string
           description?: string
           duration_minutes?: number
-          id?: string
-          is_favorite?: boolean
+          category?: string
           role_tag?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      shifts: {
-        Row: {
-          created_at: string
-          date: string
-          end_time: string
-          id: string
-          meaningful_moment: string | null
-          proud_of: string | null
-          releasing: string | null
-          start_time: string
-          type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
+          is_favorite?: boolean
           created_at?: string
-          date: string
-          end_time: string
-          id?: string
-          meaningful_moment?: string | null
-          proud_of?: string | null
-          releasing?: string | null
-          start_time: string
-          type: string
-          updated_at?: string
-          user_id: string
         }
-        Update: {
-          created_at?: string
-          date?: string
-          end_time?: string
-          id?: string
-          meaningful_moment?: string | null
-          proud_of?: string | null
-          releasing?: string | null
-          start_time?: string
-          type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       time_blocks: {
         Row: {
-          created_at: string
-          day: string
-          end_time: string
           id: string
-          start_time: string
-          title: string | null
-          type: string
-          updated_at: string
           user_id: string
+          day: string
+          start_time: string
+          end_time: string
+          type: string
+          title: string | null
+          created_at: string
         }
         Insert: {
-          created_at?: string
-          day: string
-          end_time: string
           id?: string
-          start_time: string
-          title?: string | null
-          type: string
-          updated_at?: string
           user_id: string
+          day: string
+          start_time: string
+          end_time: string
+          type: string
+          title?: string | null
+          created_at?: string
         }
         Update: {
-          created_at?: string
-          day?: string
-          end_time?: string
           id?: string
-          start_time?: string
-          title?: string | null
-          type?: string
-          updated_at?: string
           user_id?: string
+          day?: string
+          start_time?: string
+          end_time?: string
+          type?: string
+          title?: string | null
+          created_at?: string
         }
-        Relationships: []
+      }
+      shifts: {
+        Row: {
+          id: string
+          user_id: string
+          date: string
+          start_time: string
+          end_time: string
+          type: string
+          proud_of: string | null
+          releasing: string | null
+          meaningful_moment: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          date: string
+          start_time: string
+          end_time: string
+          type: string
+          proud_of?: string | null
+          releasing?: string | null
+          meaningful_moment?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          date?: string
+          start_time?: string
+          end_time?: string
+          type?: string
+          proud_of?: string | null
+          releasing?: string | null
+          meaningful_moment?: string | null
+          created_at?: string
+        }
+      }
+      barriers: {
+        Row: {
+          id: string
+          user_id: string
+          date: string
+          category: string
+          description: string
+          action_step: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          date: string
+          category: string
+          description: string
+          action_step: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          date?: string
+          category?: string
+          description?: string
+          action_step?: string
+          created_at?: string
+        }
+      }
+      challenges: {
+        Row: {
+          id: string
+          user_id: string
+          date: string
+          category: string
+          description: string
+          action_step: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          date: string
+          category: string
+          description: string
+          action_step: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          date?: string
+          category?: string
+          description?: string
+          action_step?: string
+          created_at?: string
+        }
+      }
+      journal_entries: {
+        Row: {
+          id: string
+          user_id: string
+          date: string
+          title: string | null
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          date: string
+          title?: string | null
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          date?: string
+          title?: string | null
+          content?: string
+          created_at?: string
+        }
+      }
+      media_recordings: {
+        Row: {
+          id: string
+          user_id: string
+          media_type: string
+          file_path: string
+          title: string | null
+          description: string | null
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          media_type: string
+          file_path: string
+          title?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          media_type?: string
+          file_path?: string
+          title?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          created_at?: string
+          updated_at?: string
+        }
       }
     }
     Views: {
@@ -325,131 +329,12 @@ export type Database = {
     Enums: {
       [_ in never]: never
     }
-    CompositeTypes: {
-      [_ in never]: never
-    }
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row']
+export type TablesInsert<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Insert']
+export type TablesUpdate<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Update']
