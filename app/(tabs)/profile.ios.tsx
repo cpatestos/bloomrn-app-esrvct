@@ -1,75 +1,186 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { IconSymbol } from "@/components/IconSymbol";
-import { GlassView } from "expo-glass-effect";
-import { useTheme } from "@react-navigation/native";
+
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useColorScheme } from 'react-native';
+import { useRouter } from 'expo-router';
+import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { storage } from '@/utils/storage';
+import { UserProfile } from '@/types';
+import BotanicalBackground from '@/components/BotanicalBackground';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
-  const theme = useTheme();
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    const userProfile = await storage.getUserProfile();
+    setProfile(userProfile);
+  };
+
+  const handleChangeAvatar = async () => {
+    router.push('/onboarding/avatar-selection');
+  };
+
+  const handleChangeRole = () => {
+    Alert.alert(
+      'Change Role',
+      'Are you sure you want to change your role? This will reset your profile.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Change',
+          style: 'destructive',
+          onPress: async () => {
+            await storage.clearUserProfile();
+            router.replace('/onboarding/welcome');
+          },
+        },
+      ]
+    );
+  };
+
+  const bgColor = isDark ? colors.darkBackground : colors.background;
+  const textColor = isDark ? colors.darkText : colors.text;
+  const cardColor = isDark ? colors.darkCard : colors.card;
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} edges={['top']}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <GlassView style={styles.profileHeader} glassEffectStyle="regular">
-          <IconSymbol ios_icon_name="person.circle.fill" android_material_icon_name="person" size={24} color={theme.colors.primary} />
-          <Text style={[styles.name, { color: theme.colors.text }]}>John Doe</Text>
-          <Text style={[styles.email, { color: theme.dark ? '#98989D' : '#666' }]}>john.doe@example.com</Text>
-        </GlassView>
+    <SafeAreaView style={[commonStyles.container, { backgroundColor: bgColor }]} edges={['top']}>
+      <BotanicalBackground />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={[commonStyles.title, { color: textColor }]}>Profile</Text>
+        </View>
 
-        <GlassView style={styles.section} glassEffectStyle="regular">
-          <View style={styles.infoRow}>
-            <IconSymbol ios_icon_name="phone.fill" android_material_icon_name="phone" size={24} color={theme.dark ? '#98989D' : '#666'} />
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>+1 (555) 123-4567</Text>
+        <View style={[styles.avatarSection, { backgroundColor: cardColor }]}>
+          <Text style={styles.avatar}>{profile?.avatarEmoji || '👤'}</Text>
+          <Text style={[styles.name, { color: textColor }]}>{profile?.firstName || 'User'}</Text>
+          <View style={[styles.roleBadge, { backgroundColor: isDark ? colors.darkBackground : colors.highlight }]}>
+            <Text style={[styles.roleBadgeText, { color: textColor }]}>
+              {profile?.role === 'student' ? '🎓 Student Nurse' : '⚕️ Registered Nurse'}
+            </Text>
           </View>
-          <View style={styles.infoRow}>
-            <IconSymbol ios_icon_name="location.fill" android_material_icon_name="location-on" size={24} color={theme.dark ? '#98989D' : '#666'} />
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>San Francisco, CA</Text>
-          </View>
-        </GlassView>
+          <TouchableOpacity
+            style={[buttonStyles.outline, styles.changeAvatarButton]}
+            onPress={handleChangeAvatar}
+          >
+            <Text style={[buttonStyles.text, { color: colors.primary }]}>Change Avatar</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.infoSection}>
+          <Text style={[commonStyles.subtitle, { color: textColor }]}>Profile Information</Text>
+          
+          {profile?.role === 'student' && (
+            <>
+              {profile.programType && (
+                <View style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}>
+                  <Text style={[styles.infoLabel, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>Program Type</Text>
+                  <Text style={[styles.infoValue, { color: textColor }]}>{profile.programType}</Text>
+                </View>
+              )}
+              {profile.semester && (
+                <View style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}>
+                  <Text style={[styles.infoLabel, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>Semester/Year</Text>
+                  <Text style={[styles.infoValue, { color: textColor }]}>{profile.semester}</Text>
+                </View>
+              )}
+            </>
+          )}
+
+          {profile?.role === 'rn' && (
+            <>
+              {profile.yearsExperience && (
+                <View style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}>
+                  <Text style={[styles.infoLabel, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>Years Of Experience</Text>
+                  <Text style={[styles.infoValue, { color: textColor }]}>{profile.yearsExperience}</Text>
+                </View>
+              )}
+              {profile.setting && (
+                <View style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}>
+                  <Text style={[styles.infoLabel, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>Work Setting</Text>
+                  <Text style={[styles.infoValue, { color: textColor }]}>{profile.setting}</Text>
+                </View>
+              )}
+            </>
+          )}
+        </View>
+
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[buttonStyles.outline, styles.actionButton]}
+            onPress={handleChangeRole}
+          >
+            <Text style={[buttonStyles.text, { color: colors.primary }]}>Change Role</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
+  content: {
+    paddingBottom: 20,
   },
-  container: {
-    flex: 1,
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
-  contentContainer: {
-    padding: 20,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    borderRadius: 12,
+  avatarSection: {
+    marginHorizontal: 20,
+    marginBottom: 24,
     padding: 32,
+    borderRadius: 20,
+    alignItems: 'center',
+    boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
+    elevation: 3,
+  },
+  avatar: {
+    fontSize: 80,
     marginBottom: 16,
-    gap: 12,
   },
   name: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 12,
   },
-  email: {
+  roleBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  roleBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  changeAvatarButton: {
+    width: '100%',
+  },
+  infoSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  infoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  infoValue: {
     fontSize: 16,
+    fontWeight: '500',
   },
-  section: {
-    borderRadius: 12,
-    padding: 20,
-    gap: 12,
+  actions: {
+    paddingHorizontal: 20,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  infoText: {
-    fontSize: 16,
+  actionButton: {
+    marginBottom: 12,
   },
 });

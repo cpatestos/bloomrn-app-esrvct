@@ -6,8 +6,7 @@ import { Stack, router, useSegments, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme, Alert, View, Text } from "react-native";
-import { useNetworkState } from "expo-network";
+import { useColorScheme, View, Text } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
@@ -16,7 +15,7 @@ import {
 } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { storage } from "@/utils/storage";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { colors } from "@/styles/commonStyles";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,14 +44,14 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: "#fff" }}>
-          <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10, color: "#000" }}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: colors.background }}>
+          <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10, color: colors.text }}>
             Something went wrong
           </Text>
-          <Text style={{ fontSize: 14, color: "#666", textAlign: "center" }}>
+          <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: "center" }}>
             {this.state.error?.message || "Unknown error"}
           </Text>
-          <Text style={{ fontSize: 12, color: "#999", marginTop: 20, textAlign: "center" }}>
+          <Text style={{ fontSize: 12, color: colors.textLight, marginTop: 20, textAlign: "center" }}>
             Check the console for more details
           </Text>
         </View>
@@ -66,7 +65,6 @@ class ErrorBoundary extends React.Component<
 function RootLayoutNav() {
   console.log("🚀 RootLayoutNav rendering...");
   const colorScheme = useColorScheme();
-  const networkState = useNetworkState();
   const segments = useSegments();
   const pathname = usePathname();
   const [loaded, error] = useFonts({
@@ -75,6 +73,7 @@ function RootLayoutNav() {
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const hasInitialized = useRef(false);
+  const isNavigating = useRef(false);
 
   console.log("📝 Font loaded:", loaded, "Font error:", error);
 
@@ -96,10 +95,12 @@ function RootLayoutNav() {
         const completed = profile?.hasCompletedOnboarding || false;
         setHasCompletedOnboarding(completed);
         
-        if (!completed) {
+        if (!completed && !isNavigating.current) {
           console.log("➡️  User needs onboarding, navigating to welcome...");
+          isNavigating.current = true;
           setTimeout(() => {
             router.replace('/onboarding/welcome');
+            isNavigating.current = false;
           }, 100);
         } else {
           console.log("✅ User has completed onboarding");
@@ -118,51 +119,40 @@ function RootLayoutNav() {
 
   // Route protection - only redirects when necessary
   useEffect(() => {
-    if (isCheckingOnboarding || !loaded || !hasInitialized.current) {
+    if (isCheckingOnboarding || !loaded || !hasInitialized.current || isNavigating.current) {
       return;
     }
 
     const inOnboarding = segments[0] === 'onboarding';
-    const inAuth = segments[0] === 'auth';
     const currentPath = pathname || '/';
     
     console.log("🔐 Route protection check:", { 
       hasCompletedOnboarding, 
       inOnboarding,
-      inAuth,
       currentPath,
       segments: segments.join('/')
     });
 
     // Only redirect if we're in the wrong place
-    if (!hasCompletedOnboarding && !inOnboarding && !inAuth && currentPath !== '/onboarding/welcome') {
+    if (!hasCompletedOnboarding && !inOnboarding && currentPath !== '/onboarding/welcome') {
       console.log("➡️  Redirecting to onboarding (not completed)");
+      isNavigating.current = true;
       router.replace('/onboarding/welcome');
+      setTimeout(() => { isNavigating.current = false; }, 500);
     } else if (hasCompletedOnboarding && inOnboarding) {
       console.log("➡️  Redirecting to home (already completed)");
+      isNavigating.current = true;
       router.replace('/(tabs)/(home)/');
+      setTimeout(() => { isNavigating.current = false; }, 500);
     }
   }, [hasCompletedOnboarding, segments, pathname, isCheckingOnboarding, loaded]);
-
-  React.useEffect(() => {
-    console.log("🌐 Network state:", networkState);
-    if (
-      !networkState.isConnected &&
-      networkState.isInternetReachable === false
-    ) {
-      Alert.alert(
-        "🔌 You are offline",
-        "You can keep using the app! Your changes will be saved locally and synced when you are back online."
-      );
-    }
-  }, [networkState.isConnected, networkState.isInternetReachable]);
 
   if (error) {
     console.error("❌ Font loading error:", error);
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
-        <Text style={{ fontSize: 18, color: "#000" }}>Font loading error</Text>
-        <Text style={{ fontSize: 14, color: "#666", marginTop: 10 }}>{error.message}</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
+        <Text style={{ fontSize: 18, color: colors.text }}>Font loading error</Text>
+        <Text style={{ fontSize: 14, color: colors.textSecondary, marginTop: 10 }}>{error.message}</Text>
       </View>
     );
   }
@@ -178,24 +168,24 @@ function RootLayoutNav() {
     ...DefaultTheme,
     dark: false,
     colors: {
-      primary: "rgb(79, 195, 247)",
-      background: "rgb(240, 248, 255)",
-      card: "rgb(255, 255, 255)",
-      text: "rgb(27, 94, 32)",
-      border: "rgb(176, 190, 197)",
-      notification: "rgb(239, 83, 80)",
+      primary: colors.primary,
+      background: colors.background,
+      card: colors.card,
+      text: colors.text,
+      border: colors.border,
+      notification: colors.error,
     },
   };
 
   const CustomDarkTheme: Theme = {
     ...DarkTheme,
     colors: {
-      primary: "rgb(79, 195, 247)",
-      background: "rgb(18, 18, 18)",
-      card: "rgb(28, 28, 30)",
-      text: "rgb(200, 230, 201)",
-      border: "rgb(84, 110, 122)",
-      notification: "rgb(239, 83, 80)",
+      primary: colors.primary,
+      background: colors.darkBackground,
+      card: colors.darkCard,
+      text: colors.darkText,
+      border: colors.border,
+      notification: colors.error,
     },
   };
 
@@ -208,10 +198,10 @@ function RootLayoutNav() {
           <Stack.Screen name="onboarding/welcome" />
           <Stack.Screen name="onboarding/role-selection" />
           <Stack.Screen name="onboarding/profile" />
-          <Stack.Screen name="auth/sign-in" />
-          <Stack.Screen name="auth/sign-up" />
+          <Stack.Screen name="onboarding/avatar-selection" />
           <Stack.Screen name="daily-checkin" />
           <Stack.Screen name="activity-detail" />
+          <Stack.Screen name="time-management" />
           <Stack.Screen name="(tabs)" />
         </Stack>
         <SystemBars style={"auto"} />
@@ -225,9 +215,7 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <StatusBar style="auto" animated />
-      <AuthProvider>
-        <RootLayoutNav />
-      </AuthProvider>
+      <RootLayoutNav />
     </ErrorBoundary>
   );
 }

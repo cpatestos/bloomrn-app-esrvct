@@ -1,148 +1,116 @@
 
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { LinearGradient } from 'expo-linear-gradient';
+import BotanicalBackground from '@/components/BotanicalBackground';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-
-  useEffect(() => {
-    console.log('✅ Welcome screen mounted and visible');
-  }, []);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const handleGetStarted = () => {
-    console.log('🚀 Get Started button pressed - navigating to role selection');
+    console.log('🚀 Navigating to role selection...');
     router.push('/onboarding/role-selection');
   };
 
+  const bgColor = isDark ? colors.darkBackground : colors.background;
+  const textColor = isDark ? colors.darkText : colors.text;
+
   return (
-    <View style={styles.container}>
+    <View style={[commonStyles.container, { backgroundColor: bgColor }]}>
+      <BotanicalBackground />
       <LinearGradient
-        colors={[colors.primaryLight, colors.secondaryLight]}
+        colors={isDark ? [colors.primaryDark, bgColor] : [colors.primaryLight, colors.secondaryLight]}
         style={styles.gradient}
       >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.content}>
-            <Text style={styles.logo}>🌸</Text>
-            <Text style={styles.title}>BloomRN</Text>
-            <Text style={styles.subtitle}>
-              Your wellness companion for nursing
-            </Text>
-            <Text style={styles.description}>
-              Supporting student nurses and registered nurses with mindfulness, self-care, and reflection tools.
-            </Text>
-
-            <View style={styles.featureContainer}>
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>🧘‍♀️</Text>
-                <Text style={styles.featureText}>Mindfulness</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>📝</Text>
-                <Text style={styles.featureText}>Journaling</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>📊</Text>
-                <Text style={styles.featureText}>Tracking</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>💚</Text>
-                <Text style={styles.featureText}>Self-Care</Text>
-              </View>
+        <View style={styles.content}>
+          <Text style={styles.logo}>🌸</Text>
+          <Text style={[styles.title, { color: textColor }]}>Welcome To BloomRN</Text>
+          <Text style={[styles.subtitle, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+            Your Companion For Growth, Balance, And Well-Being
+          </Text>
+          
+          <View style={styles.features}>
+            <View style={styles.feature}>
+              <Text style={styles.featureIcon}>✨</Text>
+              <Text style={[styles.featureText, { color: textColor }]}>Daily Check-Ins</Text>
+            </View>
+            <View style={styles.feature}>
+              <Text style={styles.featureIcon}>🧘‍♀️</Text>
+              <Text style={[styles.featureText, { color: textColor }]}>Wellness Activities</Text>
+            </View>
+            <View style={styles.feature}>
+              <Text style={styles.featureIcon}>📝</Text>
+              <Text style={[styles.featureText, { color: textColor }]}>Journaling</Text>
+            </View>
+            <View style={styles.feature}>
+              <Text style={styles.featureIcon}>⏰</Text>
+              <Text style={[styles.featureText, { color: textColor }]}>Time Management</Text>
             </View>
           </View>
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[buttonStyles.primary, styles.button]}
-              onPress={handleGetStarted}
-            >
-              <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>Get Started</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+          <TouchableOpacity
+            style={[buttonStyles.primary, styles.button]}
+            onPress={handleGetStarted}
+          >
+            <Text style={buttonStyles.textLight}>Get Started</Text>
+          </TouchableOpacity>
+        </View>
       </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   gradient: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'space-between',
-    paddingTop: 80,
-    paddingBottom: 60,
-    paddingHorizontal: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
+    paddingHorizontal: 40,
+    width: '100%',
   },
   logo: {
-    fontSize: 100,
-    marginBottom: 24,
+    fontSize: 80,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 56,
+    fontSize: 36,
     fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
+    fontSize: 16,
     textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 24,
+  },
+  features: {
+    width: '100%',
+    marginBottom: 40,
+  },
+  feature: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
     paddingHorizontal: 20,
   },
-  description: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 30,
-    marginBottom: 40,
-  },
-  featureContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 20,
-    marginTop: 20,
-  },
-  featureItem: {
-    alignItems: 'center',
-    width: 80,
-  },
   featureIcon: {
-    fontSize: 40,
-    marginBottom: 8,
+    fontSize: 28,
+    marginRight: 16,
   },
   featureText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    width: '100%',
-    alignItems: 'center',
+    fontSize: 18,
+    fontWeight: '500',
   },
   button: {
     width: '100%',
+    maxWidth: 300,
   },
 });

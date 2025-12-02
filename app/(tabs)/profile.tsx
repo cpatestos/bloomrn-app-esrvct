@@ -1,34 +1,30 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { storage } from '@/utils/storage';
-import { UserProfile, DailyCheckIn } from '@/types';
+import { UserProfile } from '@/types';
+import * as ImagePicker from 'expo-image-picker';
+import BotanicalBackground from '@/components/BotanicalBackground';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [checkInCount, setCheckInCount] = useState(0);
-  const [journalCount, setJournalCount] = useState(0);
 
   useEffect(() => {
-    loadData();
+    loadProfile();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const userProfile = await storage.getUserProfile();
-      setProfile(userProfile);
+  const loadProfile = async () => {
+    const userProfile = await storage.getUserProfile();
+    setProfile(userProfile);
+  };
 
-      const checkIns = await storage.getDailyCheckIns();
-      setCheckInCount(checkIns.length);
-
-      const journals = await storage.getJournalEntries();
-      setJournalCount(journals.length);
-    } catch (error) {
-      console.error('Error loading profile data:', error);
-    }
+  const handleChangeAvatar = async () => {
+    router.push('/onboarding/avatar-selection');
   };
 
   const handleChangeRole = () => {
@@ -41,195 +37,150 @@ export default function ProfileScreen() {
           text: 'Change',
           style: 'destructive',
           onPress: async () => {
-            try {
-              await storage.clearUserProfile();
-              router.replace('/onboarding/welcome');
-            } catch (error) {
-              console.error('Error changing role:', error);
-            }
+            await storage.clearUserProfile();
+            router.replace('/onboarding/welcome');
           },
         },
       ]
     );
   };
 
+  const bgColor = isDark ? colors.darkBackground : colors.background;
+  const textColor = isDark ? colors.darkText : colors.text;
+  const cardColor = isDark ? colors.darkCard : colors.card;
+
   return (
-    <ScrollView style={commonStyles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatar}>👤</Text>
+    <View style={[commonStyles.container, { backgroundColor: bgColor }]}>
+      <BotanicalBackground />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={[commonStyles.title, { color: textColor }]}>Profile</Text>
         </View>
-        <Text style={styles.name}>{profile?.firstName || 'User'}</Text>
-        <View style={styles.roleBadge}>
-          <Text style={styles.roleBadgeText}>
-            {profile?.role === 'student' ? '🎓 Student Nurse' : '⚕️ Registered Nurse'}
-          </Text>
-        </View>
-      </View>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{checkInCount}</Text>
-          <Text style={styles.statLabel}>Check-Ins</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{journalCount}</Text>
-          <Text style={styles.statLabel}>Journal Entries</Text>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={commonStyles.subtitle}>Quick Actions</Text>
-        
-        <TouchableOpacity
-          style={commonStyles.cardSmall}
-          onPress={() => router.push('/daily-checkin')}
-        >
-          <View style={styles.actionItem}>
-            <Text style={styles.actionIcon}>✨</Text>
-            <Text style={commonStyles.heading}>Daily Check-In</Text>
+        <View style={[styles.avatarSection, { backgroundColor: cardColor }]}>
+          <Text style={styles.avatar}>{profile?.avatarEmoji || '👤'}</Text>
+          <Text style={[styles.name, { color: textColor }]}>{profile?.firstName || 'User'}</Text>
+          <View style={[styles.roleBadge, { backgroundColor: isDark ? colors.darkBackground : colors.highlight }]}>
+            <Text style={[styles.roleBadgeText, { color: textColor }]}>
+              {profile?.role === 'student' ? '🎓 Student Nurse' : '⚕️ Registered Nurse'}
+            </Text>
           </View>
-        </TouchableOpacity>
-
-        {profile?.role === 'student' && (
           <TouchableOpacity
-            style={commonStyles.cardSmall}
-            onPress={() => router.push('/study/focus-timer')}
+            style={[buttonStyles.outline, styles.changeAvatarButton]}
+            onPress={handleChangeAvatar}
           >
-            <View style={styles.actionItem}>
-              <Text style={styles.actionIcon}>⏱️</Text>
-              <Text style={commonStyles.heading}>Focus Timer</Text>
-            </View>
+            <Text style={[buttonStyles.text, { color: colors.primary }]}>Change Avatar</Text>
           </TouchableOpacity>
-        )}
+        </View>
 
-        {profile?.role === 'rn' && (
+        <View style={styles.infoSection}>
+          <Text style={[commonStyles.subtitle, { color: textColor }]}>Profile Information</Text>
+          
+          {profile?.role === 'student' && (
+            <>
+              {profile.programType && (
+                <View style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}>
+                  <Text style={[styles.infoLabel, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>Program Type</Text>
+                  <Text style={[styles.infoValue, { color: textColor }]}>{profile.programType}</Text>
+                </View>
+              )}
+              {profile.semester && (
+                <View style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}>
+                  <Text style={[styles.infoLabel, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>Semester/Year</Text>
+                  <Text style={[styles.infoValue, { color: textColor }]}>{profile.semester}</Text>
+                </View>
+              )}
+            </>
+          )}
+
+          {profile?.role === 'rn' && (
+            <>
+              {profile.yearsExperience && (
+                <View style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}>
+                  <Text style={[styles.infoLabel, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>Years Of Experience</Text>
+                  <Text style={[styles.infoValue, { color: textColor }]}>{profile.yearsExperience}</Text>
+                </View>
+              )}
+              {profile.setting && (
+                <View style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}>
+                  <Text style={[styles.infoLabel, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>Work Setting</Text>
+                  <Text style={[styles.infoValue, { color: textColor }]}>{profile.setting}</Text>
+                </View>
+              )}
+            </>
+          )}
+        </View>
+
+        <View style={styles.actions}>
           <TouchableOpacity
-            style={commonStyles.cardSmall}
-            onPress={() => router.push('/shift/log-shift')}
+            style={[buttonStyles.outline, styles.actionButton]}
+            onPress={handleChangeRole}
           >
-            <View style={styles.actionItem}>
-              <Text style={styles.actionIcon}>🏥</Text>
-              <Text style={commonStyles.heading}>Log Shift</Text>
-            </View>
+            <Text style={[buttonStyles.text, { color: colors.primary }]}>Change Role</Text>
           </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          style={commonStyles.cardSmall}
-          onPress={() => router.push('/reflect/gratitude')}
-        >
-          <View style={styles.actionItem}>
-            <Text style={styles.actionIcon}>🙏</Text>
-            <Text style={commonStyles.heading}>View Gratitude Log</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={commonStyles.subtitle}>Settings</Text>
-        
-        <TouchableOpacity
-          style={commonStyles.cardSmall}
-          onPress={handleChangeRole}
-        >
-          <View style={styles.actionItem}>
-            <Text style={styles.actionIcon}>🔄</Text>
-            <Text style={commonStyles.heading}>Change Role</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={commonStyles.textLight}>BloomRN v1.0</Text>
-        <Text style={commonStyles.textLight}>Supporting nurses in their journey</Text>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
     paddingBottom: 120,
   },
   header: {
-    alignItems: 'center',
-    marginBottom: 32,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
   },
-  avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    boxShadow: '0px 4px 12px rgba(79, 195, 247, 0.3)',
-    elevation: 4,
-  },
-  avatar: {
-    fontSize: 48,
-  },
-  name: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  roleBadge: {
-    backgroundColor: colors.highlight,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  avatarSection: {
+    marginHorizontal: 20,
+    marginBottom: 24,
+    padding: 32,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  roleBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.primaryDark,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 32,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 20,
     alignItems: 'center',
     boxShadow: '0px 2px 12px rgba(0, 0, 0, 0.08)',
     elevation: 3,
   },
-  statNumber: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 4,
+  avatar: {
+    fontSize: 80,
+    marginBottom: 16,
   },
-  statLabel: {
+  name: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  roleBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  roleBadgeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
-  section: {
-    marginBottom: 32,
+  changeAvatarButton: {
+    width: '100%',
   },
-  actionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  infoSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
   },
-  actionIcon: {
-    fontSize: 24,
-    marginRight: 12,
+  infoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  footer: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+  infoValue: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  actions: {
+    paddingHorizontal: 20,
+  },
+  actionButton: {
+    marginBottom: 12,
   },
 });

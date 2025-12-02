@@ -2,6 +2,7 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
+import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
   const tabs: TabBarItem[] = [
@@ -9,25 +10,25 @@ export default function TabLayout() {
       name: '(home)',
       route: '/(tabs)/(home)/',
       icon: 'home',
-      label: 'Home',
+      label: 'HOME',
     },
     {
       name: 'wellness',
       route: '/(tabs)/wellness',
-      icon: 'favorite',
-      label: 'Wellness',
+      icon: 'spa',
+      label: 'WELLNESS',
     },
     {
       name: 'journal',
       route: '/(tabs)/journal',
       icon: 'edit_note',
-      label: 'Journal',
+      label: 'JOURNAL',
     },
     {
       name: 'profile',
       route: '/(tabs)/profile',
       icon: 'person',
-      label: 'Profile',
+      label: 'PROFILE',
     },
   ];
 

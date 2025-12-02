@@ -1,105 +1,91 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { storage } from '@/utils/storage';
-import { UserProfile } from '@/types';
+import { UserProfile, SelfCareActivity } from '@/types';
+import BotanicalBackground from '@/components/BotanicalBackground';
 
-interface Activity {
-  id: string;
-  title: string;
-  description: string;
-  duration: number;
-  category: string;
-  icon: string;
-}
-
-const activities: Activity[] = [
+const WELLNESS_ACTIVITIES: SelfCareActivity[] = [
   {
     id: '1',
     title: 'Deep Breathing',
-    description: 'Calm your mind with focused breathing exercises',
-    duration: 5,
-    category: 'Mindfulness',
-    icon: '🌬️',
+    description: 'Practice deep breathing exercises to calm your mind and reduce stress.',
+    durationMinutes: 5,
+    category: 'Breathing',
+    icon: '🫁',
+    roleTag: 'both',
   },
   {
     id: '2',
     title: 'Body Scan Meditation',
-    description: 'Release tension by scanning through your body',
-    duration: 10,
-    category: 'Mindfulness',
+    description: 'Relax each part of your body systematically to release tension.',
+    durationMinutes: 10,
+    category: 'Mind',
     icon: '🧘‍♀️',
+    roleTag: 'both',
   },
   {
     id: '3',
-    title: 'Gratitude Practice',
-    description: 'Reflect on things you&apos;re grateful for',
-    duration: 5,
-    category: 'Mindfulness',
-    icon: '🙏',
+    title: 'Gentle Stretching',
+    description: 'Simple stretches to relieve physical tension and improve flexibility.',
+    durationMinutes: 10,
+    category: 'Body',
+    icon: '🤸‍♀️',
+    roleTag: 'both',
   },
   {
     id: '4',
-    title: 'Gentle Stretching',
-    description: 'Release physical tension with simple stretches',
-    duration: 10,
-    category: 'Body',
-    icon: '🤸‍♀️',
+    title: 'Gratitude Practice',
+    description: 'Reflect on three things you&apos;re grateful for today.',
+    durationMinutes: 5,
+    category: 'Heart',
+    icon: '💚',
+    roleTag: 'both',
   },
   {
     id: '5',
-    title: 'Nature Walk',
-    description: 'Connect with nature for mental clarity',
-    duration: 20,
+    title: 'Progressive Muscle Relaxation',
+    description: 'Tense and release muscle groups to reduce physical stress.',
+    durationMinutes: 15,
     category: 'Body',
-    icon: '🌳',
+    icon: '💪',
+    roleTag: 'both',
   },
   {
     id: '6',
-    title: 'Journaling',
-    description: 'Express your thoughts and feelings on paper',
-    duration: 15,
-    category: 'Reflection',
-    icon: '📓',
+    title: 'Mindful Walking',
+    description: 'Take a short walk while focusing on your senses and surroundings.',
+    durationMinutes: 15,
+    category: 'Mind',
+    icon: '🚶‍♀️',
+    roleTag: 'both',
   },
   {
     id: '7',
-    title: 'Music Therapy',
-    description: 'Listen to calming music to relax',
-    duration: 15,
-    category: 'Self-Care',
-    icon: '🎵',
+    title: 'Study Break Meditation',
+    description: 'Quick meditation to refresh your mind between study sessions.',
+    durationMinutes: 5,
+    category: 'Mind',
+    icon: '📚',
+    roleTag: 'student',
   },
   {
     id: '8',
-    title: 'Tea Break',
-    description: 'Enjoy a mindful tea or coffee break',
-    duration: 10,
-    category: 'Self-Care',
-    icon: '☕',
-  },
-  {
-    id: '9',
-    title: 'Power Nap',
-    description: 'Recharge with a short rest',
-    duration: 20,
-    category: 'Self-Care',
-    icon: '😴',
-  },
-  {
-    id: '10',
-    title: 'Creative Expression',
-    description: 'Draw, color, or create something',
-    duration: 20,
-    category: 'Self-Care',
-    icon: '🎨',
+    title: 'Post-Shift Decompression',
+    description: 'Release the stress of your shift with guided relaxation.',
+    durationMinutes: 10,
+    category: 'Heart',
+    icon: '🏥',
+    roleTag: 'rn',
   },
 ];
 
 export default function WellnessScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
@@ -108,178 +94,140 @@ export default function WellnessScreen() {
   }, []);
 
   const loadProfile = async () => {
-    try {
-      const userProfile = await storage.getUserProfile();
-      setProfile(userProfile);
-    } catch (error) {
-      console.error('Error loading profile:', error);
-    }
+    const userProfile = await storage.getUserProfile();
+    setProfile(userProfile);
   };
 
-  const categories = ['All', 'Mindfulness', 'Body', 'Reflection', 'Self-Care'];
+  const categories = ['All', 'Breathing', 'Body', 'Mind', 'Heart'];
 
-  const filteredActivities = selectedCategory === 'All'
-    ? activities
-    : activities.filter(a => a.category === selectedCategory);
+  const filteredActivities = WELLNESS_ACTIVITIES.filter((activity) => {
+    const categoryMatch = selectedCategory === 'All' || activity.category === selectedCategory;
+    const roleMatch = activity.roleTag === 'both' || activity.roleTag === profile?.role;
+    return categoryMatch && roleMatch;
+  });
+
+  const bgColor = isDark ? colors.darkBackground : colors.background;
+  const textColor = isDark ? colors.darkText : colors.text;
+  const cardColor = isDark ? colors.darkCard : colors.card;
 
   return (
-    <ScrollView style={commonStyles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={commonStyles.title}>Wellness Activities</Text>
-        <Text style={commonStyles.text}>
-          Choose an activity to support your well-being
-        </Text>
-      </View>
+    <View style={[commonStyles.container, { backgroundColor: bgColor }]}>
+      <BotanicalBackground />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={[commonStyles.title, { color: textColor }]}>Wellness Activities</Text>
+          <Text style={[commonStyles.textSecondary, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+            Take Time For Self-Care And Mindfulness
+          </Text>
+        </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
-        contentContainerStyle={styles.categoryContainer}
-      >
-        {categories.map((category, index) => (
-          <React.Fragment key={index}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryScroll}
+          contentContainerStyle={styles.categoryContent}
+        >
+          {categories.map((category) => (
             <TouchableOpacity
+              key={category}
               style={[
-                styles.categoryChip,
-                selectedCategory === category && styles.categoryChipSelected,
+                styles.categoryButton,
+                { backgroundColor: cardColor },
+                selectedCategory === category && styles.categoryButtonSelected,
               ]}
               onPress={() => setSelectedCategory(category)}
             >
               <Text
                 style={[
-                  styles.categoryChipText,
-                  selectedCategory === category && styles.categoryChipTextSelected,
+                  styles.categoryButtonText,
+                  { color: textColor },
+                  selectedCategory === category && styles.categoryButtonTextSelected,
                 ]}
               >
                 {category}
               </Text>
             </TouchableOpacity>
-          </React.Fragment>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
 
-      <View style={styles.activitiesContainer}>
-        {filteredActivities.map((activity, index) => (
-          <React.Fragment key={index}>
+        <View style={styles.activities}>
+          {filteredActivities.map((activity) => (
             <TouchableOpacity
-              style={commonStyles.card}
-              onPress={() => {
-                router.push({
-                  pathname: '/activity-detail',
-                  params: {
-                    title: activity.title,
-                    description: activity.description,
-                    duration: activity.duration,
-                    icon: activity.icon,
-                  },
-                });
-              }}
+              key={activity.id}
+              style={[commonStyles.card, { backgroundColor: cardColor }]}
+              onPress={() => router.push(`/activity-detail?id=${activity.id}`)}
             >
-              <View style={styles.activityContent}>
+              <View style={styles.activityHeader}>
                 <Text style={styles.activityIcon}>{activity.icon}</Text>
                 <View style={styles.activityInfo}>
-                  <Text style={commonStyles.heading}>{activity.title}</Text>
-                  <Text style={commonStyles.textSecondary}>{activity.description}</Text>
-                  <View style={styles.activityMeta}>
-                    <View style={styles.durationBadge}>
-                      <Text style={styles.durationText}>⏱️ {activity.duration} min</Text>
-                    </View>
-                    <View style={styles.categoryBadge}>
-                      <Text style={styles.categoryBadgeText}>{activity.category}</Text>
-                    </View>
-                  </View>
+                  <Text style={[commonStyles.heading, { color: textColor }]}>{activity.title}</Text>
+                  <Text style={[commonStyles.textSecondary, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                    {activity.durationMinutes} minutes • {activity.category}
+                  </Text>
                 </View>
               </View>
+              <Text style={[commonStyles.text, styles.activityDescription, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                {activity.description}
+              </Text>
             </TouchableOpacity>
-          </React.Fragment>
-        ))}
-      </View>
-    </ScrollView>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
     paddingBottom: 120,
   },
   header: {
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
   },
   categoryScroll: {
-    marginBottom: 24,
-    marginHorizontal: -20,
-    paddingHorizontal: 20,
+    marginBottom: 20,
   },
-  categoryContainer: {
+  categoryContent: {
+    paddingHorizontal: 20,
     gap: 12,
-    paddingRight: 20,
   },
-  categoryChip: {
-    backgroundColor: colors.card,
-    paddingHorizontal: 20,
+  categoryButton: {
     paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  categoryChipSelected: {
-    backgroundColor: colors.primary,
+  categoryButtonSelected: {
     borderColor: colors.primary,
+    backgroundColor: colors.highlight,
   },
-  categoryChipText: {
+  categoryButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
   },
-  categoryChipTextSelected: {
-    color: '#FFFFFF',
+  categoryButtonTextSelected: {
+    color: colors.primaryDark,
   },
-  activitiesContainer: {
-    gap: 16,
+  activities: {
+    paddingHorizontal: 20,
   },
-  activityContent: {
+  activityHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   activityIcon: {
-    fontSize: 48,
+    fontSize: 40,
     marginRight: 16,
   },
   activityInfo: {
     flex: 1,
   },
-  activityMeta: {
-    flexDirection: 'row',
-    marginTop: 12,
-    gap: 8,
-  },
-  durationBadge: {
-    backgroundColor: colors.highlight,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  durationText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.primaryDark,
-  },
-  categoryBadge: {
-    backgroundColor: colors.backgroundAlt,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.secondary,
-  },
-  categoryBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.secondaryDark,
+  activityDescription: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

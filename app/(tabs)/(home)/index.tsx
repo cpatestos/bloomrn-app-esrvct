@@ -1,14 +1,17 @@
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles } from '@/styles/commonStyles';
 import { storage } from '@/utils/storage';
 import { UserProfile, DailyCheckIn } from '@/types';
 import { LinearGradient } from 'expo-linear-gradient';
+import BotanicalBackground from '@/components/BotanicalBackground';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
   const [greeting, setGreeting] = useState('');
@@ -48,138 +51,164 @@ export default function HomeScreen() {
     router.push('/daily-checkin');
   };
 
+  const bgColor = isDark ? colors.darkBackground : colors.background;
+  const textColor = isDark ? colors.darkText : colors.text;
+  const cardColor = isDark ? colors.darkCard : colors.card;
+
   return (
-    <ScrollView style={commonStyles.container} contentContainerStyle={styles.content}>
-      <LinearGradient
-        colors={[colors.primaryLight, colors.background]}
-        style={styles.headerGradient}
-      >
-        <View style={styles.header}>
-          <Text style={styles.greeting}>{greeting},</Text>
-          <Text style={styles.name}>{profile?.firstName || 'Friend'} 🌸</Text>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>
-              {profile?.role === 'student' ? '🎓 Student Nurse' : '⚕️ Registered Nurse'}
+    <View style={[commonStyles.container, { backgroundColor: bgColor }]}>
+      <BotanicalBackground />
+      <ScrollView contentContainerStyle={styles.content}>
+        <LinearGradient
+          colors={isDark ? [colors.primaryDark, bgColor] : [colors.primaryLight, bgColor]}
+          style={styles.headerGradient}
+        >
+          <View style={styles.header}>
+            <Text style={[styles.greeting, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+              {greeting},
             </Text>
-          </View>
-        </View>
-      </LinearGradient>
-
-      <View style={styles.mainContent}>
-        {!todayCheckIn ? (
-          <TouchableOpacity
-            style={styles.checkInCard}
-            onPress={handleDailyCheckIn}
-          >
-            <LinearGradient
-              colors={[colors.primary, colors.primaryDark]}
-              style={styles.checkInGradient}
-            >
-              <Text style={styles.checkInIcon}>✨</Text>
-              <Text style={styles.checkInTitle}>Daily Check-In</Text>
-              <Text style={styles.checkInSubtitle}>
-                Take a moment to reflect on how you&apos;re feeling
+            <Text style={[styles.name, { color: textColor }]}>
+              {profile?.firstName || 'Friend'} 🌸
+            </Text>
+            <View style={[styles.roleBadge, { backgroundColor: cardColor }]}>
+              <Text style={[styles.roleBadgeText, { color: textColor }]}>
+                {profile?.role === 'student' ? '🎓 Student Nurse' : '⚕️ Registered Nurse'}
               </Text>
-              <View style={styles.checkInButton}>
-                <Text style={styles.checkInButtonText}>Start Check-In →</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        ) : (
-          <View style={commonStyles.card}>
-            <View style={styles.checkInComplete}>
-              <Text style={styles.checkInCompleteIcon}>✅</Text>
-              <View style={styles.checkInCompleteContent}>
-                <Text style={commonStyles.heading}>Today&apos;s Check-In Complete</Text>
-                <Text style={commonStyles.textSecondary}>
-                  Mood: {getMoodEmoji(todayCheckIn.mood)} • Stress: {todayCheckIn.stress}/5 • Energy: {todayCheckIn.energy}/5
-                </Text>
-              </View>
             </View>
           </View>
-        )}
+        </LinearGradient>
 
-        <View style={styles.quickActions}>
-          <Text style={commonStyles.subtitle}>Quick Actions</Text>
-          
-          <TouchableOpacity
-            style={commonStyles.cardSmall}
-            onPress={() => router.push('/(tabs)/wellness')}
-          >
-            <View style={styles.actionItem}>
-              <Text style={styles.actionIcon}>🧘‍♀️</Text>
-              <View style={styles.actionContent}>
-                <Text style={commonStyles.heading}>Mindfulness & Self-Care</Text>
-                <Text style={commonStyles.textSecondary}>
-                  Explore activities to support your well-being
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={commonStyles.cardSmall}
-            onPress={() => router.push('/(tabs)/journal')}
-          >
-            <View style={styles.actionItem}>
-              <Text style={styles.actionIcon}>📝</Text>
-              <View style={styles.actionContent}>
-                <Text style={commonStyles.heading}>Journal & Reflect</Text>
-                <Text style={commonStyles.textSecondary}>
-                  Write about your experiences and feelings
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          {profile?.role === 'student' && (
+        <View style={styles.mainContent}>
+          {!todayCheckIn ? (
             <TouchableOpacity
-              style={commonStyles.cardSmall}
-              onPress={() => router.push('/study/focus-timer')}
+              style={styles.checkInCard}
+              onPress={handleDailyCheckIn}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                style={styles.checkInGradient}
+              >
+                <Text style={styles.checkInIcon}>✨</Text>
+                <Text style={styles.checkInTitle}>Daily Check-In</Text>
+                <Text style={styles.checkInSubtitle}>
+                  Take A Moment To Reflect On How You&apos;re Feeling
+                </Text>
+                <View style={styles.checkInButton}>
+                  <Text style={styles.checkInButtonText}>Start Check-In →</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : (
+            <View style={[commonStyles.card, { backgroundColor: cardColor }]}>
+              <View style={styles.checkInComplete}>
+                <Text style={styles.checkInCompleteIcon}>✅</Text>
+                <View style={styles.checkInCompleteContent}>
+                  <Text style={[commonStyles.heading, { color: textColor }]}>Today&apos;s Check-In Complete</Text>
+                  <Text style={[commonStyles.textSecondary, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                    Mood: {getMoodEmoji(todayCheckIn.mood)} • Stress: {todayCheckIn.stress}/5 • Energy: {todayCheckIn.energy}/5
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.quickActions}>
+            <Text style={[commonStyles.subtitle, { color: textColor, marginBottom: 16 }]}>Quick Actions</Text>
+            
+            <TouchableOpacity
+              style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}
+              onPress={() => router.push('/(tabs)/wellness')}
             >
               <View style={styles.actionItem}>
-                <Text style={styles.actionIcon}>⏱️</Text>
+                <Text style={styles.actionIcon}>🧘‍♀️</Text>
                 <View style={styles.actionContent}>
-                  <Text style={commonStyles.heading}>Focus Timer</Text>
-                  <Text style={commonStyles.textSecondary}>
-                    Use the Pomodoro technique for studying
+                  <Text style={[commonStyles.heading, { color: textColor }]}>Wellness Activities</Text>
+                  <Text style={[commonStyles.textSecondary, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                    Explore Self-Care And Mindfulness
                   </Text>
                 </View>
               </View>
             </TouchableOpacity>
-          )}
 
-          {profile?.role === 'rn' && (
             <TouchableOpacity
-              style={commonStyles.cardSmall}
-              onPress={() => router.push('/shift/log-shift')}
+              style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}
+              onPress={() => router.push('/(tabs)/journal')}
             >
               <View style={styles.actionItem}>
-                <Text style={styles.actionIcon}>🏥</Text>
+                <Text style={styles.actionIcon}>📝</Text>
                 <View style={styles.actionContent}>
-                  <Text style={commonStyles.heading}>Log Shift</Text>
-                  <Text style={commonStyles.textSecondary}>
-                    Record and reflect on your shift
+                  <Text style={[commonStyles.heading, { color: textColor }]}>Journal & Reflect</Text>
+                  <Text style={[commonStyles.textSecondary, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                    Write About Your Experiences
                   </Text>
                 </View>
               </View>
             </TouchableOpacity>
-          )}
-        </View>
 
-        <View style={styles.affirmation}>
-          <View style={commonStyles.card}>
-            <Text style={styles.affirmationIcon}>💚</Text>
-            <Text style={styles.affirmationTitle}>Today&apos;s Affirmation</Text>
-            <Text style={styles.affirmationText}>
-              {profile?.role === 'student' 
-                ? "You are capable of learning and growing every day. Trust in your journey."
-                : "You make a difference in the lives you touch. Your care matters."}
-            </Text>
+            <TouchableOpacity
+              style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}
+              onPress={() => router.push('/time-management')}
+            >
+              <View style={styles.actionItem}>
+                <Text style={styles.actionIcon}>⏰</Text>
+                <View style={styles.actionContent}>
+                  <Text style={[commonStyles.heading, { color: textColor }]}>Time Management</Text>
+                  <Text style={[commonStyles.textSecondary, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                    Fixed, Focused, And Flex Time
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {profile?.role === 'student' && (
+              <TouchableOpacity
+                style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}
+                onPress={() => router.push('/(tabs)/wellness')}
+              >
+                <View style={styles.actionItem}>
+                  <Text style={styles.actionIcon}>📚</Text>
+                  <View style={styles.actionContent}>
+                    <Text style={[commonStyles.heading, { color: textColor }]}>Study Tracker</Text>
+                    <Text style={[commonStyles.textSecondary, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                      Track Your Study Progress
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {profile?.role === 'rn' && (
+              <TouchableOpacity
+                style={[commonStyles.cardSmall, { backgroundColor: cardColor }]}
+                onPress={() => router.push('/(tabs)/wellness')}
+              >
+                <View style={styles.actionItem}>
+                  <Text style={styles.actionIcon}>🏥</Text>
+                  <View style={styles.actionContent}>
+                    <Text style={[commonStyles.heading, { color: textColor }]}>Shift Tracker</Text>
+                    <Text style={[commonStyles.textSecondary, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                      Log And Reflect On Shifts
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.affirmation}>
+            <View style={[commonStyles.card, { backgroundColor: cardColor }]}>
+              <Text style={styles.affirmationIcon}>💚</Text>
+              <Text style={[styles.affirmationTitle, { color: textColor }]}>Today&apos;s Affirmation</Text>
+              <Text style={[styles.affirmationText, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+                {profile?.role === 'student' 
+                  ? "You Are Capable Of Learning And Growing Every Day. Trust In Your Journey."
+                  : "You Make A Difference In The Lives You Touch. Your Care Matters."}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -199,17 +228,14 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 20,
     fontWeight: '500',
-    color: colors.textSecondary,
     marginBottom: 4,
   },
   name: {
     fontSize: 36,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: 12,
   },
   roleBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -220,7 +246,6 @@ const styles = StyleSheet.create({
   roleBadgeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
   },
   mainContent: {
     paddingHorizontal: 20,
@@ -302,13 +327,11 @@ const styles = StyleSheet.create({
   affirmationTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
     textAlign: 'center',
     marginBottom: 12,
   },
   affirmationText: {
     fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     fontStyle: 'italic',

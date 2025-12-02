@@ -1,7 +1,7 @@
 
 import { StyleSheet } from 'react-native';
 
-// Calming blues and greens color palette
+// Calming blues and greens color palette with botanical theme
 export const colors = {
   // Primary colors - calming blues
   primaryLight: '#B3E5FC',    // Light sky blue
@@ -12,6 +12,11 @@ export const colors = {
   secondaryLight: '#C8E6C9',   // Light mint green
   secondary: '#66BB6A',        // Fresh green
   secondaryDark: '#388E3C',    // Deep green
+  
+  // Botanical accents
+  leafGreen: '#81C784',        // Soft leaf green
+  mintFresh: '#A5D6A7',        // Fresh mint
+  oceanBlue: '#4DD0E1',        // Ocean blue
   
   // Neutral colors
   background: '#F0F8FF',       // Alice blue (very light blue)
@@ -37,6 +42,12 @@ export const colors = {
   border: '#B0BEC5',           // Grey blue
   divider: '#CFD8DC',          // Light grey
   shadow: 'rgba(0, 0, 0, 0.1)',
+  
+  // Dark mode colors
+  darkBackground: '#1A1A1A',
+  darkCard: '#2C2C2C',
+  darkText: '#C8E6C9',
+  darkTextSecondary: '#90A4AE',
 };
 
 export const buttonStyles = StyleSheet.create({
@@ -186,5 +197,13 @@ export const commonStyles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.primaryDark,
+  },
+  botanicalBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.05,
   },
 });

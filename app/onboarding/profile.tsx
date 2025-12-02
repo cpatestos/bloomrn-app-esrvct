@@ -1,123 +1,197 @@
 
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
 import { storage } from '@/utils/storage';
+import { UserProfile } from '@/types';
+import BotanicalBackground from '@/components/BotanicalBackground';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [firstName, setFirstName] = React.useState('');
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [firstName, setFirstName] = useState('');
+  const [programType, setProgramType] = useState<'BSN' | 'ADN' | 'Accelerated' | ''>('');
+  const [semester, setSemester] = useState('');
+  const [yearsExperience, setYearsExperience] = useState('');
+  const [setting, setSetting] = useState<'Hospital' | 'Clinic' | 'Community' | ''>('');
 
-  const handleContinue = async () => {
-    if (!firstName.trim()) {
-      Alert.alert('Required', 'Please enter your first name');
-      return;
-    }
+  useEffect(() => {
+    loadProfile();
+  }, []);
 
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-
-    try {
-      const profile = await storage.getUserProfile();
-      await storage.saveUserProfile({
-        ...profile,
-        firstName: firstName.trim(),
-        role: profile?.role || 'student',
-        priorities: profile?.priorities || [],
-        hasCompletedOnboarding: true,
-      });
-
-      router.replace('/(tabs)/(home)/');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to save profile');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const loadProfile = async () => {
+    const savedProfile = await storage.getUserProfile();
+    setProfile(savedProfile);
   };
 
+  const handleContinue = async () => {
+    if (!firstName.trim() || !profile) return;
+
+    const updatedProfile: UserProfile = {
+      ...profile,
+      firstName: firstName.trim(),
+      hasCompletedOnboarding: false, // Will be set to true after avatar selection
+    };
+
+    if (profile.role === 'student') {
+      updatedProfile.programType = programType || undefined;
+      updatedProfile.semester = semester || undefined;
+    } else {
+      updatedProfile.yearsExperience = yearsExperience || undefined;
+      updatedProfile.setting = setting || undefined;
+    }
+
+    await storage.saveUserProfile(updatedProfile);
+    console.log('✅ Profile saved, navigating to avatar selection...');
+    router.push('/onboarding/avatar-selection');
+  };
+
+  const bgColor = isDark ? colors.darkBackground : colors.background;
+  const textColor = isDark ? colors.darkText : colors.text;
+  const cardColor = isDark ? colors.darkCard : colors.card;
+  const inputBg = isDark ? colors.darkCard : colors.card;
+
   return (
-    <ScrollView style={commonStyles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={commonStyles.title}>Welcome!</Text>
-        <Text style={commonStyles.text}>
-          Let&apos;s personalize your experience
+    <View style={[commonStyles.container, { backgroundColor: bgColor }]}>
+      <BotanicalBackground />
+      <ScrollView contentContainerStyle={[commonStyles.content, styles.content]}>
+        <Text style={[commonStyles.title, { color: textColor }]}>Tell Us About Yourself</Text>
+        <Text style={[commonStyles.textSecondary, styles.subtitle, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
+          Help Us Personalize Your Experience
         </Text>
-      </View>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>What should we call you?</Text>
-        <TextInput
-          style={commonStyles.input}
-          value={firstName}
-          onChangeText={setFirstName}
-          placeholder="Enter your first name"
-          placeholderTextColor={colors.textLight}
-          autoCapitalize="words"
-          autoFocus
-        />
+        <View style={styles.form}>
+          <Text style={[styles.label, { color: textColor }]}>First Name *</Text>
+          <TextInput
+            style={[commonStyles.input, { backgroundColor: inputBg, color: textColor }]}
+            placeholder="Enter your first name"
+            placeholderTextColor={isDark ? colors.darkTextSecondary : colors.textLight}
+            value={firstName}
+            onChangeText={setFirstName}
+          />
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoIcon}>💡</Text>
-          <Text style={styles.infoText}>
-            We&apos;ll use this to personalize your experience and make the app feel more welcoming.
-          </Text>
+          {profile?.role === 'student' && (
+            <>
+              <Text style={[styles.label, { color: textColor }]}>Program Type</Text>
+              <View style={styles.optionGroup}>
+                {['BSN', 'ADN', 'Accelerated'].map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.option,
+                      { backgroundColor: cardColor },
+                      programType === type && styles.optionSelected,
+                    ]}
+                    onPress={() => setProgramType(type as any)}
+                  >
+                    <Text style={[styles.optionText, { color: textColor }]}>{type}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={[styles.label, { color: textColor }]}>Current Semester/Year</Text>
+              <TextInput
+                style={[commonStyles.input, { backgroundColor: inputBg, color: textColor }]}
+                placeholder="e.g., Semester 3, Year 2"
+                placeholderTextColor={isDark ? colors.darkTextSecondary : colors.textLight}
+                value={semester}
+                onChangeText={setSemester}
+              />
+            </>
+          )}
+
+          {profile?.role === 'rn' && (
+            <>
+              <Text style={[styles.label, { color: textColor }]}>Years Of Experience</Text>
+              <TextInput
+                style={[commonStyles.input, { backgroundColor: inputBg, color: textColor }]}
+                placeholder="e.g., 5 years"
+                placeholderTextColor={isDark ? colors.darkTextSecondary : colors.textLight}
+                value={yearsExperience}
+                onChangeText={setYearsExperience}
+                keyboardType="numeric"
+              />
+
+              <Text style={[styles.label, { color: textColor }]}>Work Setting</Text>
+              <View style={styles.optionGroup}>
+                {['Hospital', 'Clinic', 'Community'].map((s) => (
+                  <TouchableOpacity
+                    key={s}
+                    style={[
+                      styles.option,
+                      { backgroundColor: cardColor },
+                      setting === s && styles.optionSelected,
+                    ]}
+                    onPress={() => setSetting(s as any)}
+                  >
+                    <Text style={[styles.optionText, { color: textColor }]}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+
+          <TouchableOpacity
+            style={[
+              buttonStyles.primary,
+              styles.button,
+              !firstName.trim() && styles.buttonDisabled,
+            ]}
+            onPress={handleContinue}
+            disabled={!firstName.trim()}
+          >
+            <Text style={buttonStyles.textLight}>Continue</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-
-      <TouchableOpacity
-        style={[buttonStyles.primary, styles.button]}
-        onPress={handleContinue}
-        disabled={isSubmitting || !firstName.trim()}
-      >
-        <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>
-          {isSubmitting ? 'Setting up...' : 'Get Started'}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingTop: 80,
   },
-  header: {
-    marginBottom: 40,
+  subtitle: {
+    marginBottom: 32,
   },
   form: {
-    marginBottom: 40,
+    width: '100%',
   },
   label: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  optionGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
     marginBottom: 12,
   },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: colors.highlight,
+  option: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 12,
-    padding: 16,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: colors.accent,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  infoIcon: {
-    fontSize: 24,
-    marginRight: 12,
+  optionSelected: {
+    borderColor: colors.primary,
   },
-  infoText: {
-    flex: 1,
+  optionText: {
     fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
+    fontWeight: '600',
   },
   button: {
+    marginTop: 32,
     width: '100%',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
 });
