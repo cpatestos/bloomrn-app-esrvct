@@ -2,7 +2,7 @@
 import "react-native-reanimated";
 import React, { useEffect, useState, useRef } from "react";
 import { useFonts } from "expo-font";
-import { Stack, router, useSegments } from "expo-router";
+import { Stack, router, useSegments, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -68,22 +68,24 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const networkState = useNetworkState();
   const segments = useSegments();
+  const pathname = usePathname();
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
-  const hasCheckedOnboarding = useRef(false);
+  const hasInitialized = useRef(false);
 
   console.log("📝 Font loaded:", loaded, "Font error:", error);
 
+  // Initial onboarding check - only runs once
   useEffect(() => {
-    if (!loaded || hasCheckedOnboarding.current) {
+    if (!loaded || hasInitialized.current) {
       return;
     }
 
-    console.log("🔍 useEffect: checking onboarding...");
-    hasCheckedOnboarding.current = true;
+    console.log("🔍 Initial onboarding check...");
+    hasInitialized.current = true;
 
     async function checkOnboarding() {
       try {
@@ -95,8 +97,10 @@ function RootLayoutNav() {
         setHasCompletedOnboarding(completed);
         
         if (!completed) {
-          console.log("➡️  Redirecting to onboarding welcome screen...");
-          router.replace('/onboarding/welcome');
+          console.log("➡️  User needs onboarding, navigating to welcome...");
+          setTimeout(() => {
+            router.replace('/onboarding/welcome');
+          }, 100);
         } else {
           console.log("✅ User has completed onboarding");
         }
@@ -105,37 +109,40 @@ function RootLayoutNav() {
       } finally {
         setIsCheckingOnboarding(false);
         console.log("✅ Onboarding check complete");
+        SplashScreen.hideAsync().catch(err => console.error("❌ Error hiding splash:", err));
       }
     }
 
-    console.log("🎨 Fonts loaded, checking onboarding and hiding splash...");
     checkOnboarding();
-    SplashScreen.hideAsync().catch(err => console.error("❌ Error hiding splash:", err));
   }, [loaded]);
 
+  // Route protection - only redirects when necessary
   useEffect(() => {
-    if (isCheckingOnboarding || !loaded) {
+    if (isCheckingOnboarding || !loaded || !hasInitialized.current) {
       return;
     }
 
     const inOnboarding = segments[0] === 'onboarding';
     const inAuth = segments[0] === 'auth';
+    const currentPath = pathname || '/';
     
     console.log("🔐 Route protection check:", { 
       hasCompletedOnboarding, 
       inOnboarding,
       inAuth,
-      currentRoute: segments.join('/') || 'root'
+      currentPath,
+      segments: segments.join('/')
     });
 
-    if (!hasCompletedOnboarding && !inOnboarding && !inAuth) {
-      console.log("➡️  Redirecting to onboarding from route protection");
+    // Only redirect if we're in the wrong place
+    if (!hasCompletedOnboarding && !inOnboarding && !inAuth && currentPath !== '/onboarding/welcome') {
+      console.log("➡️  Redirecting to onboarding (not completed)");
       router.replace('/onboarding/welcome');
     } else if (hasCompletedOnboarding && inOnboarding) {
-      console.log("➡️  Redirecting to home from route protection");
+      console.log("➡️  Redirecting to home (already completed)");
       router.replace('/(tabs)/(home)/');
     }
-  }, [hasCompletedOnboarding, segments, isCheckingOnboarding, loaded]);
+  }, [hasCompletedOnboarding, segments, pathname, isCheckingOnboarding, loaded]);
 
   React.useEffect(() => {
     console.log("🌐 Network state:", networkState);

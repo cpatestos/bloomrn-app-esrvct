@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors, commonStyles, buttonStyles } from '@/styles/commonStyles';
@@ -7,6 +7,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+
+  useEffect(() => {
+    console.log('✅ Welcome screen mounted and visible');
+  }, []);
+
+  const handleGetStarted = () => {
+    console.log('🚀 Get Started button pressed - navigating to role selection');
+    router.push('/onboarding/role-selection');
+  };
 
   return (
     <View style={styles.container}>
@@ -51,10 +60,7 @@ export default function WelcomeScreen() {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[buttonStyles.primary, styles.button]}
-              onPress={() => {
-                console.log('Get Started button pressed');
-                router.push('/onboarding/role-selection');
-              }}
+              onPress={handleGetStarted}
             >
               <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>Get Started</Text>
             </TouchableOpacity>
