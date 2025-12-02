@@ -74,32 +74,14 @@ export default function JournalScreen() {
         </Text>
       </View>
 
-      <View style={styles.actionButtons}>
-        {!showNewEntry ? (
-          <TouchableOpacity
-            style={[buttonStyles.primary, styles.actionButton]}
-            onPress={() => setShowNewEntry(true)}
-          >
-            <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>✍️ New Journal Entry</Text>
-          </TouchableOpacity>
-        ) : null}
-        
+      {!showNewEntry ? (
         <TouchableOpacity
-          style={[buttonStyles.outline, styles.actionButton]}
-          onPress={() => router.push('/media/record-media')}
+          style={[buttonStyles.primary, styles.newEntryButton]}
+          onPress={() => setShowNewEntry(true)}
         >
-          <Text style={buttonStyles.text}>🎤 Record Audio/Video</Text>
+          <Text style={[buttonStyles.text, { color: '#FFFFFF' }]}>✍️ New Journal Entry</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[buttonStyles.outline, styles.actionButton]}
-          onPress={() => router.push('/media/view-recordings')}
-        >
-          <Text style={buttonStyles.text}>📁 View Recordings</Text>
-        </TouchableOpacity>
-      </View>
-
-      {showNewEntry && (
+      ) : (
         <View style={[commonStyles.card, styles.newEntryCard]}>
           <Text style={commonStyles.heading}>New Entry</Text>
           <TextInput
@@ -204,12 +186,8 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 24,
   },
-  actionButtons: {
-    gap: 12,
+  newEntryButton: {
     marginBottom: 24,
-  },
-  actionButton: {
-    width: '100%',
   },
   newEntryCard: {
     marginBottom: 24,
