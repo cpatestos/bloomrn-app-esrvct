@@ -51,7 +51,7 @@ export default function RoleSelectionScreen() {
           <Text style={styles.roleIcon}>🎓</Text>
           <Text style={[styles.roleTitle, { color: textColor }]}>Student Nurse</Text>
           <Text style={[styles.roleDescription, { color: isDark ? colors.darkTextSecondary : colors.textSecondary }]}>
-            Focus On Study Management, Exam Prep, And Academic Support
+            Wellness, Organization, And Self-Care For Student Nurses
           </Text>
         </TouchableOpacity>
 
