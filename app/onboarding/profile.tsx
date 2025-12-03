@@ -13,7 +13,7 @@ export default function ProfileScreen() {
   const isDark = colorScheme === 'dark';
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [firstName, setFirstName] = useState('');
-  const [programType, setProgramType] = useState<'BSN' | 'ADN' | 'Accelerated' | ''>('');
+  const [programType, setProgramType] = useState<'ADN' | 'BSN' | 'MSN/DNP/PHD' | ''>('');
   const [semester, setSemester] = useState('');
   const [yearsExperience, setYearsExperience] = useState('');
   const [setting, setSetting] = useState<'Hospital' | 'Clinic' | 'Community' | ''>('');
